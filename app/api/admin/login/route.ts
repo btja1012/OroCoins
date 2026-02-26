@@ -40,9 +40,7 @@ export async function POST(request: NextRequest) {
     })
 
     return response
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err)
-    console.error('Login error:', detail)
-    return NextResponse.json({ error: 'Error interno.', detail }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Error interno.' }, { status: 500 })
   }
 }
