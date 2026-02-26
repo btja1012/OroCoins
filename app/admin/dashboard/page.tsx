@@ -177,7 +177,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       <h2 className="text-2xl font-black text-white">Dashboard</h2>
 
       {/* Global stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Total pedidos" value={String(globalStats.total_orders)} />
         <StatCard label="Monedas vendidas" value={`${formatCoins(totalCoinsSold)} 🪙`} />
         <StatCard label="Coins disponibles" value={`${formatCoins(totalAvailable)} 🪙`} />

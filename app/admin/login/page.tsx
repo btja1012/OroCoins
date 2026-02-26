@@ -17,7 +17,7 @@ export default async function LoginPage() {
           <p className="text-zinc-500 text-sm mt-1">Panel de Administración</p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6">
           <LoginForm />
         </div>
       </div>
