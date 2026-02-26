@@ -167,7 +167,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   ])
 
   const totalCoinsSold = globalStats.total_coins_sold
-  const totalAvailable = coinAccounts.reduce((sum, a) => sum + a.current_balance, 0)
+  const totalAvailable = coinAccounts.reduce((sum, a) => sum + Number(a.current_balance), 0)
 
   return (
     <div className="space-y-8">
