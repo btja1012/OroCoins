@@ -26,7 +26,8 @@ export function LoginForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error ?? 'Error al iniciar sesión.')
+        const msg = data.detail ? `${data.error}: ${data.detail}` : (data.error ?? 'Error al iniciar sesión.')
+        setError(msg)
         return
       }
 
