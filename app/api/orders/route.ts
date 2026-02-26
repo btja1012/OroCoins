@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createOrder } from '@/lib/db'
-import { getCountry, sellers, sellerCountryMap, roundToNearest500 } from '@/lib/data'
+import { createOrder, sql } from '@/lib/db'
+import { getCountry, sellers, sellerCountryMap, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
+import { sendPushToRolesAndSeller } from '@/lib/push'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount } = body
 
-    // Validate required fields
     if (!seller || !sellers.includes(seller)) {
       return NextResponse.json({ error: 'Vendedor no válido.' }, { status: 400 })
     }
@@ -18,7 +18,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Debes seleccionar la cuenta de Oros.' }, { status: 400 })
     }
 
-    // Country is determined by seller — not trusted from client
+    // ── Duplicate comprobante check ──
+    const db = sql()
+    const existing = await db`
+      SELECT id FROM orders WHERE game_username = ${gameUsername.trim()} AND seller = ${seller} LIMIT 1
+    `
+    if (existing.length > 0) {
+      return NextResponse.json(
+        { error: `El comprobante "${gameUsername.trim()}" ya fue registrado para ${seller}. Esa venta no es aprobada.` },
+        { status: 409 }
+      )
+    }
+
     const countrySlug = sellerCountryMap[seller as keyof typeof sellerCountryMap]
     const country = getCountry(countrySlug)
     if (!country) {
@@ -28,7 +39,6 @@ export async function POST(request: NextRequest) {
     let pkg = country.packages.find((p) => p.id === packageId)
     let isCustom = false
 
-    // Custom amount order
     if (!pkg && customPrice && customCoins) {
       const rate = country.packages[0].coins / country.packages[0].price
       const expectedCoins = roundToNearest500(parseFloat(customPrice) * rate)
@@ -59,6 +69,12 @@ export async function POST(request: NextRequest) {
       currencySymbol: country.currencySymbol,
       isCustom,
       coinAccount,
+    })
+
+    // ── Push notification (non-blocking) ──
+    sendPushToRolesAndSeller(seller, {
+      title: `🪙 Nuevo pedido — ${country.flag} ${seller}`,
+      body: `${formatCoins(pkg.coins)} 🪙 · ${formatPrice(pkg.price, country.currencyCode)} · Ref: ${gameUsername.trim()}`,
     })
 
     return NextResponse.json({ orderNumber: order.order_number }, { status: 201 })

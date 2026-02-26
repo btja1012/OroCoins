@@ -12,6 +12,8 @@ import {
 import { countries, formatPrice, formatCoins } from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
 import { LogoutButton } from '@/components/admin/LogoutButton'
+import { PushSetup } from '@/components/admin/PushSetup'
+import { OrderActions } from '@/components/admin/OrderActions'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -50,7 +52,8 @@ export default async function DashboardPage() {
               {ROLE_LABELS[session.role]}
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <PushSetup />
             <span className="text-zinc-500 text-sm hidden sm:block">{session.username}</span>
             <LogoutButton />
           </div>
@@ -127,6 +130,7 @@ async function SellerView({ sellerName }: { sellerName: string }) {
                     <th className="text-right px-4 py-3">Monto</th>
                     <th className="text-right px-4 py-3">Fecha</th>
                     <th className="text-center px-4 py-3">Estado</th>
+                    <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -147,6 +151,9 @@ async function SellerView({ sellerName }: { sellerName: string }) {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <StatusBadge status={order.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <OrderActions orderNumber={order.order_number} status={order.status} />
                       </td>
                     </tr>
                   ))}
@@ -273,6 +280,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     <th className="text-left px-4 py-3">Comprobante</th>
                     <th className="text-right px-4 py-3">Fecha</th>
                     <th className="text-center px-4 py-3">Estado</th>
+                    <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -297,6 +305,9 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <StatusBadge status={order.status} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <OrderActions orderNumber={order.order_number} status={order.status} />
                         </td>
                       </tr>
                     )
