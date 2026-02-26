@@ -24,9 +24,6 @@ export async function PUT(
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
 
-  const isAdmin = session.role === 'admin' || session.role === 'super_admin'
-  if (!isAdmin) return NextResponse.json({ error: 'Sin permisos.' }, { status: 403 })
-
   try {
     const { orderNumber } = await params
     const { status } = await request.json()
@@ -36,6 +33,16 @@ export async function PUT(
     }
 
     const db = sql()
+    const isAdmin = session.role === 'admin' || session.role === 'super_admin'
+
+    // Sellers can only update their own orders
+    if (!isAdmin) {
+      const order = await db`SELECT seller FROM orders WHERE order_number = ${orderNumber} LIMIT 1`
+      if (!order[0] || order[0].seller !== session.sellerName) {
+        return NextResponse.json({ error: 'Sin permisos.' }, { status: 403 })
+      }
+    }
+
     await db`
       UPDATE orders SET status = ${status}, updated_at = NOW()
       WHERE order_number = ${orderNumber}
