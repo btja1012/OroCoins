@@ -5,7 +5,7 @@ import { getCountry, sellers, sellerCountryMap, roundToNearest500 } from '@/lib/
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { packageId, gameUsername, seller, customPrice, customCoins } = body
+    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount } = body
 
     // Validate required fields
     if (!seller || !sellers.includes(seller)) {
@@ -13,6 +13,9 @@ export async function POST(request: NextRequest) {
     }
     if (!gameUsername?.trim()) {
       return NextResponse.json({ error: 'La referencia de comprobante es requerida.' }, { status: 400 })
+    }
+    if (!coinAccount || !['OrosPV1', 'OrosPV2'].includes(coinAccount)) {
+      return NextResponse.json({ error: 'Debes seleccionar la cuenta de Oros.' }, { status: 400 })
     }
 
     // Country is determined by seller — not trusted from client
@@ -55,6 +58,7 @@ export async function POST(request: NextRequest) {
       currencyCode: country.currencyCode,
       currencySymbol: country.currencySymbol,
       isCustom,
+      coinAccount,
     })
 
     return NextResponse.json({ orderNumber: order.order_number }, { status: 201 })

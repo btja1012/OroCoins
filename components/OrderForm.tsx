@@ -25,6 +25,7 @@ export function OrderForm() {
   const [customCoins, setCustomCoins] = useState(0)
   const [isCustomSelected, setIsCustomSelected] = useState(false)
   const [gameUsername, setGameUsername] = useState('')
+  const [coinAccount, setCoinAccount] = useState<'OrosPV1' | 'OrosPV2' | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -80,6 +81,7 @@ export function OrderForm() {
 
     if (!selectedSeller) { setError('Selecciona un vendedor.'); return }
     if (!hasSelection) { setError('Selecciona un paquete o ingresa un monto.'); return }
+    if (!coinAccount) { setError('Selecciona la cuenta de Oros (OrosPV1 o OrosPV2).'); return }
     if (gameUsername.trim().length < 2) {
       setError('La referencia de comprobante debe tener al menos 2 caracteres.')
       return
@@ -92,6 +94,7 @@ export function OrderForm() {
         gameUsername: gameUsername.trim(),
       }
 
+      body.coinAccount = coinAccount
       if (selectedPackage) {
         body.packageId = selectedPackage.id
       } else {
@@ -259,6 +262,28 @@ export function OrderForm() {
               {formatCoins(displayCoins)} 🪙 ·{' '}
               {formatPrice(displayPrice, selectedCountry.currencyCode)}
             </span>
+          </div>
+
+          <div>
+            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">
+              Cuenta de Oros
+            </label>
+            <div className="flex gap-2">
+              {(['OrosPV1', 'OrosPV2'] as const).map((acc) => (
+                <button
+                  key={acc}
+                  type="button"
+                  onClick={() => setCoinAccount(acc)}
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all
+                    ${coinAccount === acc
+                      ? 'bg-amber-500 border-amber-500 text-black'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
+                    }`}
+                >
+                  {acc}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
