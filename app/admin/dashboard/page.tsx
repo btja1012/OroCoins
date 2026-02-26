@@ -166,7 +166,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     getCoinAccounts(),
   ])
 
-  const totalCoinsSold = globalStats.total_coins_sold
+  const totalCoinsSold = Number(globalStats.total_coins_sold)
   const totalAvailable = coinAccounts.reduce((sum, a) => sum + Number(a.current_balance), 0)
 
   return (
@@ -194,7 +194,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
               <div key={account.name} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
                 <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">{account.name}</p>
                 <p className="text-3xl font-black text-amber-400">
-                  {formatCoins(account.current_balance)}<span className="text-lg ml-1">🪙</span>
+                  {formatCoins(Number(account.current_balance))}<span className="text-lg ml-1">🪙</span>
                 </p>
                 <p className="text-zinc-600 text-xs mt-1">disponibles</p>
               </div>
@@ -234,7 +234,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         </td>
                         <td className="px-4 py-3 text-right text-zinc-300">{s.order_count}</td>
                         <td className="px-4 py-3 text-right text-amber-400 font-bold">
-                          {formatCoins(s.total_coins)} 🪙
+                          {formatCoins(Number(s.total_coins))} 🪙
                         </td>
                         <td className="px-4 py-3 text-right text-white font-bold">
                           {formatPrice(Number(s.total_amount), s.currency_code)}
@@ -281,7 +281,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         <td className="px-4 py-3 text-zinc-300 font-medium">{order.seller ?? '—'}</td>
                         <td className="px-4 py-3 text-zinc-400">{country?.flag} {order.country}</td>
                         <td className="px-4 py-3 text-right text-amber-400 font-bold">
-                          {formatCoins(order.package_coins)} 🪙
+                          {formatCoins(Number(order.package_coins))} 🪙
                         </td>
                         <td className="px-4 py-3 text-right text-white font-semibold">
                           {formatPrice(Number(order.package_price), order.currency_code)}
