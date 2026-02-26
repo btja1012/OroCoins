@@ -42,7 +42,7 @@ export function OrderForm() {
     if (selectedCountry) {
       const rate = getCoinRate(selectedCountry)
       const num = parseFloat(value.replace(',', '.'))
-      setCustomCoins(!isNaN(num) && num > 0 ? Math.floor(num * rate) : 0)
+      setCustomCoins(!isNaN(num) && num > 0 ? Math.round(num * rate) : 0)
     }
   }
 

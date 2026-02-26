@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Custom amount order
     if (!pkg && customPrice && customCoins) {
       const rate = country.packages[0].coins / country.packages[0].price
-      const expectedCoins = Math.floor(parseFloat(customPrice) * rate)
+      const expectedCoins = Math.round(parseFloat(customPrice) * rate)
       if (Math.abs(expectedCoins - parseInt(customCoins)) > 1) {
         return NextResponse.json({ error: 'Cálculo de monedas inválido.' }, { status: 400 })
       }
