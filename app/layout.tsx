@@ -5,9 +5,9 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'OroCoins — Tu tienda de monedas',
+  title: 'Oros Pura Vida',
   description:
-    'Compra monedas para tu juego favorito. Venezuela, Costa Rica, Ecuador, Colombia y México. Rápido, seguro y confiable.',
+    'Registro de pedidos de monedas. Venezuela, Costa Rica, Ecuador, Colombia y México.',
   keywords: ['monedas', 'coins', 'Venezuela', 'Costa Rica', 'Ecuador', 'Colombia', 'México'],
 }
 
