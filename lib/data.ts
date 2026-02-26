@@ -146,9 +146,9 @@ export function getCoinRate(country: Country): number {
   return country.packages[0].coins / country.packages[0].price
 }
 
-/** Round coins to nearest 500 */
+/** Round coins to nearest 100 */
 export function roundToNearest500(coins: number): number {
-  return Math.round(coins / 500) * 500
+  return Math.round(coins / 100) * 100
 }
 
 // Sellers and their assigned countries
