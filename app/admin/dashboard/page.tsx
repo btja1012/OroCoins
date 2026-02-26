@@ -41,9 +41,12 @@ export default async function DashboardPage() {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-zinc-950/90 backdrop-blur border-b border-zinc-900">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-xl font-black text-white">🪙 Oros Pura Vida</Link>
-            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${ROLE_COLORS[session.role]}`}>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="text-lg font-black text-white">
+              <span className="sm:hidden">🪙 OrosPV</span>
+              <span className="hidden sm:inline">🪙 Oros Pura Vida</span>
+            </Link>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${ROLE_COLORS[session.role]}`}>
               {ROLE_LABELS[session.role]}
             </span>
           </div>

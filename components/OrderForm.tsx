@@ -207,7 +207,7 @@ export function OrderForm() {
                 Monto personalizado
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm pointer-events-none">
                   {selectedCountry.currencySymbol}
@@ -219,29 +219,29 @@ export function OrderForm() {
                   placeholder="0"
                   min="0"
                   step="any"
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-white text-sm placeholder:text-zinc-600"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-8 pr-3 py-2.5 text-white text-sm placeholder:text-zinc-600"
                 />
               </div>
 
-              <span className="text-zinc-600 text-sm">→</span>
-
-              <span className={`flex-1 text-sm font-bold ${customCoins > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
-                {customCoins > 0 ? `${formatCoins(customCoins)} 🪙` : '— 🪙'}
-              </span>
-
-              {customCoins > 0 && (
-                <button
-                  type="button"
-                  onClick={handleUseCustom}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex-shrink-0 ${
-                    isCustomSelected
-                      ? 'bg-amber-500 text-black'
-                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
-                  }`}
-                >
-                  {isCustomSelected ? '✓ Listo' : 'Usar'}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                <span className="text-zinc-600 text-sm">→</span>
+                <span className={`flex-1 text-sm font-bold ${customCoins > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
+                  {customCoins > 0 ? `${formatCoins(customCoins)} 🪙` : '— 🪙'}
+                </span>
+                {customCoins > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleUseCustom}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex-shrink-0 ${
+                      isCustomSelected
+                        ? 'bg-amber-500 text-black'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                    }`}
+                  >
+                    {isCustomSelected ? '✓ Listo' : 'Usar'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
