@@ -20,15 +20,20 @@ export async function GET(request: NextRequest) {
 
   const created: string[] = []
 
-  for (const user of INITIAL_USERS) {
-    const passwordHash = await bcrypt.hash(user.password, 12)
-    await createAdminUser({
-      username: user.username,
-      passwordHash,
-      role: user.role,
-      sellerName: user.sellerName,
-    })
-    created.push(user.username)
+  try {
+    for (const user of INITIAL_USERS) {
+      const passwordHash = await bcrypt.hash(user.password, 12)
+      await createAdminUser({
+        username: user.username,
+        passwordHash,
+        role: user.role,
+        sellerName: user.sellerName,
+      })
+      created.push(user.username)
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: 'Seed failed', detail: message }, { status: 500 })
   }
 
   return NextResponse.json({
