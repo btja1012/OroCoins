@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, AlertCircle, Zap, Lock } from 'lucide-react'
+import { Loader2, AlertCircle, ChevronRight } from 'lucide-react'
 import {
   countries,
   sellers,
@@ -29,7 +29,6 @@ export function OrderForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Country is derived from seller — never chosen manually
   const selectedCountry: Country | null = selectedSeller
     ? (countries.find((c) => c.slug === sellerCountryMap[selectedSeller]) ?? null)
     : null
@@ -92,9 +91,9 @@ export function OrderForm() {
       const body: Record<string, unknown> = {
         seller: selectedSeller,
         gameUsername: gameUsername.trim(),
+        coinAccount,
       }
 
-      body.coinAccount = coinAccount
       if (selectedPackage) {
         body.packageId = selectedPackage.id
       } else {
@@ -120,56 +119,40 @@ export function OrderForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6">
 
-      {/* ── STEP 1: Vendedor ── */}
-      <div>
-        <p className="text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-3">
-          Vendedor
-        </p>
-        <div className="flex flex-wrap gap-2">
+      {/* ── PASO 1: Vendedor ── */}
+      <Section step={1} title="Vendedor">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {sellers.map((seller) => {
             const active = selectedSeller === seller
-            const countrySlug = sellerCountryMap[seller]
-            const country = countries.find((c) => c.slug === countrySlug)
+            const country = countries.find((c) => c.slug === sellerCountryMap[seller])
             return (
               <button
                 key={seller}
                 type="button"
                 onClick={() => handleSellerSelect(seller)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold transition-all text-left
                   ${active
                     ? 'bg-amber-500 border-amber-500 text-black'
                     : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
                   }`}
               >
-                <span className="text-base">{country?.flag}</span>
-                {seller}
+                <span className="text-xl leading-none">{country?.flag}</span>
+                <div>
+                  <p className={`font-bold text-sm ${active ? 'text-black' : 'text-white'}`}>{seller}</p>
+                  <p className={`text-xs ${active ? 'text-black/60' : 'text-zinc-500'}`}>{country?.name}</p>
+                </div>
               </button>
             )
           })}
         </div>
+      </Section>
 
-        {/* Country indicator */}
-        {selectedCountry && (
-          <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
-            <Lock size={11} className="text-zinc-600" />
-            País asignado:
-            <span className="text-zinc-300 font-medium">
-              {selectedCountry.flag} {selectedCountry.name}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* ── STEP 2: Paquete ── */}
+      {/* ── PASO 2: Paquete ── */}
       {selectedCountry && (
-        <div>
-          <p className="text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-3">
-            Paquete — {selectedCountry.currency}
-          </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 mb-4">
+        <Section step={2} title={`Paquete — ${selectedCountry.currency}`}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
             {selectedCountry.packages.map((pkg) => {
               const active = selectedPackage?.id === pkg.id
               return (
@@ -177,21 +160,22 @@ export function OrderForm() {
                   key={pkg.id}
                   type="button"
                   onClick={() => handlePackageSelect(pkg)}
-                  className={`relative text-left p-3.5 rounded-xl border transition-all
+                  className={`relative text-left p-4 rounded-xl border transition-all
                     ${active
-                      ? 'bg-amber-950/50 border-amber-500'
+                      ? 'bg-amber-500/10 border-amber-500 ring-1 ring-amber-500/30'
                       : 'bg-zinc-900 border-zinc-800 hover:border-zinc-600'
                     }`}
                 >
                   {pkg.popular && (
-                    <span className="absolute -top-2 left-3 bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide">
+                    <span className="absolute -top-2.5 left-3 bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide">
                       ★ Popular
                     </span>
                   )}
-                  <p className={`font-bold text-sm ${active ? 'text-white' : 'text-zinc-200'}`}>
-                    {formatCoins(pkg.coins)} 🪙
+                  <p className={`font-black text-base ${active ? 'text-amber-400' : 'text-white'}`}>
+                    {formatCoins(pkg.coins)}
+                    <span className="text-sm ml-1">🪙</span>
                   </p>
-                  <p className={`text-sm font-semibold mt-0.5 ${active ? 'text-amber-400' : 'text-zinc-500'}`}>
+                  <p className={`text-sm font-semibold mt-1 ${active ? 'text-amber-300/80' : 'text-zinc-500'}`}>
                     {formatPrice(pkg.price, selectedCountry.currencyCode)}
                   </p>
                 </button>
@@ -199,15 +183,12 @@ export function OrderForm() {
             })}
           </div>
 
-          {/* Custom calculator */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
-            <div className="flex items-center gap-1.5 mb-3">
-              <Zap size={13} className="text-amber-400" />
-              <span className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">
-                Monto personalizado
-              </span>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          {/* Calculadora personalizada */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+            <p className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-3">
+              Monto personalizado
+            </p>
+            <div className="flex items-center gap-3">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm pointer-events-none">
                   {selectedCountry.currencySymbol}
@@ -219,62 +200,61 @@ export function OrderForm() {
                   placeholder="0"
                   min="0"
                   step="any"
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-8 pr-3 py-2.5 text-white text-sm placeholder:text-zinc-600"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-8 pr-3 py-2.5 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
                 />
               </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-zinc-600 text-sm">→</span>
-                <span className={`flex-1 text-sm font-bold ${customCoins > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
+              <ChevronRight size={16} className="text-zinc-600 shrink-0" />
+              <div className="flex-1 flex items-center justify-between">
+                <span className={`text-sm font-bold ${customCoins > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
                   {customCoins > 0 ? `${formatCoins(customCoins)} 🪙` : '— 🪙'}
                 </span>
                 {customCoins > 0 && (
                   <button
                     type="button"
                     onClick={handleUseCustom}
-                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex-shrink-0 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       isCustomSelected
                         ? 'bg-amber-500 text-black'
-                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                        : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600 hover:text-white'
                     }`}
                   >
-                    {isCustomSelected ? '✓ Listo' : 'Usar'}
+                    {isCustomSelected ? '✓ Seleccionado' : 'Usar'}
                   </button>
                 )}
               </div>
             </div>
           </div>
-        </div>
+        </Section>
       )}
 
-      {/* ── STEP 3: Form fields ── */}
+      {/* ── PASO 3: Detalles ── */}
       {selectedCountry && hasSelection && (
-        <div className="space-y-4">
-          {/* Selection summary */}
-          <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
-            <span className="text-zinc-500 text-sm">
-              {selectedCountry.flag} {selectedCountry.name}
-              {isCustomSelected && (
-                <span className="text-zinc-600 text-xs ml-1">(personalizado)</span>
-              )}
-            </span>
-            <span className="text-amber-400 font-bold text-sm">
-              {formatCoins(displayCoins)} 🪙 ·{' '}
-              {formatPrice(displayPrice, selectedCountry.currencyCode)}
-            </span>
+        <Section step={3} title="Detalles del pedido">
+          {/* Resumen selección */}
+          <div className="flex items-center justify-between bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 mb-4">
+            <div className="flex items-center gap-2 text-sm text-zinc-400">
+              <span>{selectedCountry.flag}</span>
+              <span>{selectedCountry.name}</span>
+              {isCustomSelected && <span className="text-zinc-600 text-xs">(personalizado)</span>}
+            </div>
+            <div className="text-right">
+              <p className="text-amber-400 font-black text-sm">{formatCoins(displayCoins)} 🪙</p>
+              <p className="text-zinc-500 text-xs">{formatPrice(displayPrice, selectedCountry.currencyCode)}</p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">
+          {/* Cuenta de Oros */}
+          <div className="mb-4">
+            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">
               Cuenta de Oros
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {(['OrosPV1', 'OrosPV2'] as const).map((acc) => (
                 <button
                   key={acc}
                   type="button"
                   onClick={() => setCoinAccount(acc)}
-                  className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all
+                  className={`py-3 rounded-xl border text-sm font-bold transition-all
                     ${coinAccount === acc
                       ? 'bg-amber-500 border-amber-500 text-black'
                       : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
@@ -286,8 +266,9 @@ export function OrderForm() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">
+          {/* Referencia comprobante */}
+          <div className="mb-4">
+            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">
               Referencia de comprobante
             </label>
             <input
@@ -296,12 +277,12 @@ export function OrderForm() {
               onChange={(e) => setGameUsername(e.target.value)}
               placeholder="Número o referencia del comprobante"
               maxLength={100}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700 focus:outline-none focus:border-zinc-600"
             />
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">
+            <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm mb-4">
               <AlertCircle size={15} className="mt-0.5 shrink-0" />
               {error}
             </div>
@@ -320,9 +301,24 @@ export function OrderForm() {
               'Registrar Pedido'
             )}
           </button>
-        </div>
+        </Section>
       )}
 
     </form>
+  )
+}
+
+/* ── Componente de sección con paso numerado ── */
+function Section({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="w-6 h-6 rounded-full bg-amber-500 text-black text-xs font-black flex items-center justify-center shrink-0">
+          {step}
+        </span>
+        <h2 className="text-zinc-300 text-sm font-bold uppercase tracking-widest">{title}</h2>
+      </div>
+      {children}
+    </div>
   )
 }
