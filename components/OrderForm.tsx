@@ -2,24 +2,39 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, AlertCircle, Zap } from 'lucide-react'
-import { countries, type Country, type Package, formatPrice, formatCoins, getCoinRate } from '@/lib/data'
+import { Loader2, AlertCircle, Zap, Lock } from 'lucide-react'
+import {
+  countries,
+  sellers,
+  sellerCountryMap,
+  type Country,
+  type Package,
+  type Seller,
+  formatPrice,
+  formatCoins,
+  getCoinRate,
+  roundToNearest500,
+} from '@/lib/data'
 
 export function OrderForm() {
   const router = useRouter()
 
-  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
+  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null)
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [customCoins, setCustomCoins] = useState(0)
   const [isCustomSelected, setIsCustomSelected] = useState(false)
   const [gameUsername, setGameUsername] = useState('')
-  const [customerContact, setCustomerContact] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleCountrySelect = (country: Country) => {
-    setSelectedCountry(country)
+  // Country is derived from seller — never chosen manually
+  const selectedCountry: Country | null = selectedSeller
+    ? (countries.find((c) => c.slug === sellerCountryMap[selectedSeller]) ?? null)
+    : null
+
+  const handleSellerSelect = (seller: Seller) => {
+    setSelectedSeller(seller)
     setSelectedPackage(null)
     setIsCustomSelected(false)
     setCustomAmount('')
@@ -42,7 +57,7 @@ export function OrderForm() {
     if (selectedCountry) {
       const rate = getCoinRate(selectedCountry)
       const num = parseFloat(value.replace(',', '.'))
-      setCustomCoins(!isNaN(num) && num > 0 ? Math.round(num * rate) : 0)
+      setCustomCoins(!isNaN(num) && num > 0 ? roundToNearest500(num * rate) : 0)
     }
   }
 
@@ -63,17 +78,18 @@ export function OrderForm() {
     e.preventDefault()
     setError('')
 
-    if (!selectedCountry) { setError('Selecciona un país.'); return }
+    if (!selectedSeller) { setError('Selecciona un vendedor.'); return }
     if (!hasSelection) { setError('Selecciona un paquete o ingresa un monto.'); return }
-    if (gameUsername.trim().length < 2) { setError('El usuario debe tener al menos 2 caracteres.'); return }
-    if (customerContact.trim().length < 6) { setError('Ingresa un contacto válido.'); return }
+    if (gameUsername.trim().length < 2) {
+      setError('La referencia de comprobante debe tener al menos 2 caracteres.')
+      return
+    }
 
     setLoading(true)
     try {
       const body: Record<string, unknown> = {
-        countrySlug: selectedCountry.slug,
+        seller: selectedSeller,
         gameUsername: gameUsername.trim(),
-        customerContact: customerContact.trim(),
       }
 
       if (selectedPackage) {
@@ -103,34 +119,47 @@ export function OrderForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
 
-      {/* ── STEP 1: Country ── */}
+      {/* ── STEP 1: Vendedor ── */}
       <div>
         <p className="text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-3">
-          País
+          Vendedor
         </p>
         <div className="flex flex-wrap gap-2">
-          {countries.map((country) => {
-            const active = selectedCountry?.slug === country.slug
+          {sellers.map((seller) => {
+            const active = selectedSeller === seller
+            const countrySlug = sellerCountryMap[seller]
+            const country = countries.find((c) => c.slug === countrySlug)
             return (
               <button
-                key={country.slug}
+                key={seller}
                 type="button"
-                onClick={() => handleCountrySelect(country)}
+                onClick={() => handleSellerSelect(seller)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all
                   ${active
                     ? 'bg-amber-500 border-amber-500 text-black'
                     : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
                   }`}
               >
-                <span className="text-base">{country.flag}</span>
-                {country.name}
+                <span className="text-base">{country?.flag}</span>
+                {seller}
               </button>
             )
           })}
         </div>
+
+        {/* Country indicator */}
+        {selectedCountry && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
+            <Lock size={11} className="text-zinc-600" />
+            País asignado:
+            <span className="text-zinc-300 font-medium">
+              {selectedCountry.flag} {selectedCountry.name}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* ── STEP 2: Package ── */}
+      {/* ── STEP 2: Paquete ── */}
       {selectedCountry && (
         <div>
           <p className="text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-3">
@@ -222,7 +251,9 @@ export function OrderForm() {
           <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
             <span className="text-zinc-500 text-sm">
               {selectedCountry.flag} {selectedCountry.name}
-              {isCustomSelected && <span className="text-zinc-600 text-xs ml-1">(personalizado)</span>}
+              {isCustomSelected && (
+                <span className="text-zinc-600 text-xs ml-1">(personalizado)</span>
+              )}
             </span>
             <span className="text-amber-400 font-bold text-sm">
               {formatCoins(displayCoins)} 🪙 ·{' '}
@@ -232,28 +263,14 @@ export function OrderForm() {
 
           <div>
             <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">
-              Usuario del juego
+              Referencia de comprobante
             </label>
             <input
               type="text"
               value={gameUsername}
               onChange={(e) => setGameUsername(e.target.value)}
-              placeholder="Nombre en el juego"
-              maxLength={50}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700"
-            />
-          </div>
-
-          <div>
-            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-[0.15em] mb-2">
-              Contacto
-            </label>
-            <input
-              type="text"
-              value={customerContact}
-              onChange={(e) => setCustomerContact(e.target.value)}
-              placeholder="WhatsApp o teléfono"
-              maxLength={30}
+              placeholder="Número o referencia del comprobante"
+              maxLength={100}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700"
             />
           </div>

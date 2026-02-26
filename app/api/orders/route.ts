@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder } from '@/lib/db'
-import { getCountry } from '@/lib/data'
+import { getCountry, sellers, sellerCountryMap, roundToNearest500 } from '@/lib/data'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { countrySlug, packageId, gameUsername, customerContact, customPrice, customCoins } = body
+    const { packageId, gameUsername, seller, customPrice, customCoins } = body
 
     // Validate required fields
-    if (!countrySlug || !gameUsername?.trim() || !customerContact?.trim()) {
-      return NextResponse.json({ error: 'Faltan campos requeridos.' }, { status: 400 })
+    if (!seller || !sellers.includes(seller)) {
+      return NextResponse.json({ error: 'Vendedor no válido.' }, { status: 400 })
+    }
+    if (!gameUsername?.trim()) {
+      return NextResponse.json({ error: 'La referencia de comprobante es requerida.' }, { status: 400 })
     }
 
+    // Country is determined by seller — not trusted from client
+    const countrySlug = sellerCountryMap[seller as keyof typeof sellerCountryMap]
     const country = getCountry(countrySlug)
     if (!country) {
       return NextResponse.json({ error: 'País no válido.' }, { status: 400 })
@@ -23,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Custom amount order
     if (!pkg && customPrice && customCoins) {
       const rate = country.packages[0].coins / country.packages[0].price
-      const expectedCoins = Math.round(parseFloat(customPrice) * rate)
+      const expectedCoins = roundToNearest500(parseFloat(customPrice) * rate)
       if (Math.abs(expectedCoins - parseInt(customCoins)) > 1) {
         return NextResponse.json({ error: 'Cálculo de monedas inválido.' }, { status: 400 })
       }
@@ -43,7 +48,7 @@ export async function POST(request: NextRequest) {
       country: country.name,
       countrySlug: country.slug,
       gameUsername: gameUsername.trim(),
-      customerContact: customerContact.trim(),
+      seller,
       packageId: pkg.id,
       packageCoins: pkg.coins,
       packagePrice: pkg.price,

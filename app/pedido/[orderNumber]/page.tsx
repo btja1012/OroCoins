@@ -64,6 +64,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
             Resumen del pedido
           </p>
           <div className="space-y-3 text-sm">
+            <Row label="Vendedor" value={order.seller ?? order.customer_contact} />
             <Row label="País" value={`${country.flag} ${order.country}`} />
             <Row
               label="Paquete"
@@ -84,7 +85,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
                 </span>
               }
             />
-            <Row label="Usuario del juego" value={order.game_username} />
+            <Row label="Ref. comprobante" value={order.game_username} />
             <Row
               label="Estado"
               value={
@@ -135,7 +136,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
             {[
               `Transfiere ${formatPrice(Number(order.package_price), order.currency_code)} al número indicado.`,
               'Toma una captura del comprobante de pago.',
-              `Envía el comprobante y tu usuario "${order.game_username}" al vendedor.`,
+              `Envía el comprobante (ref. ${order.game_username}) al vendedor ${order.seller ?? ''}.`,
               'Recibirás tus monedas en breve.',
             ].map((step, i) => (
               <li key={i} className="flex gap-3 text-sm text-zinc-400">

@@ -146,6 +146,23 @@ export function getCoinRate(country: Country): number {
   return country.packages[0].coins / country.packages[0].price
 }
 
+/** Round coins to nearest 500 */
+export function roundToNearest500(coins: number): number {
+  return Math.round(coins / 500) * 500
+}
+
+// Sellers and their assigned countries
+export const sellers = ['Andres', 'Dulius', 'Natasha', 'Boster', 'Maga'] as const
+export type Seller = (typeof sellers)[number]
+
+export const sellerCountryMap: Record<Seller, string> = {
+  Andres: 'costa-rica',
+  Dulius: 'mexico',
+  Natasha: 'ecuador',
+  Maga: 'venezuela',
+  Boster: 'colombia',
+}
+
 function addThousands(n: number): string {
   const parts = n.toString().split('.')
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.')
