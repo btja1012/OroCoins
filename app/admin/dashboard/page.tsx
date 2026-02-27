@@ -23,7 +23,7 @@ export const metadata = { title: 'Dashboard — Oros Pura Vida' }
 const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin',
   admin: 'Admin',
-  seller: 'Agente',
+  seller: 'Colector',
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -191,7 +191,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <StatCard label="Total pedidos" value={String(globalStats.total_orders)} />
         <StatCard label="Monedas vendidas" value={`${formatCoins(totalCoinsSold)} 🪙`} />
         <StatCard label="Coins disponibles" value={`${formatCoins(totalAvailable)} 🪙`} />
-        <StatCard label="Vendedores activos" value={String(sellerStats.length)} />
+        <StatCard label="Colectores activos" value={String(sellerStats.length)} />
       </div>
 
       {/* Charts — super admin only */}
@@ -245,10 +245,10 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         </div>
       )}
 
-      {/* Per-agent breakdown */}
+      {/* Per-collector breakdown */}
       <div>
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
-          Resumen por agente
+          Resumen por colector
         </h3>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
           {sellerStats.length === 0 ? (
@@ -258,7 +258,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wider">
-                    <th className="text-left px-4 py-3">Vendedor</th>
+                    <th className="text-left px-4 py-3">Colector</th>
                     <th className="text-left px-4 py-3">País</th>
                     <th className="text-right px-4 py-3">Pedidos</th>
                     <th className="text-right px-4 py-3">Monedas</th>
@@ -305,7 +305,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                 <thead>
                   <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wider">
                     <th className="text-left px-4 py-3"># Orden</th>
-                    <th className="text-left px-4 py-3">Vendedor</th>
+                    <th className="text-left px-4 py-3">Colector</th>
                     <th className="text-left px-4 py-3">País</th>
                     <th className="text-right px-4 py-3">Monedas</th>
                     <th className="text-right px-4 py-3">Monto</th>

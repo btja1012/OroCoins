@@ -121,8 +121,8 @@ export function OrderForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
 
-      {/* ── PASO 1: Vendedor ── */}
-      <Section step={1} title="Vendedor">
+      {/* ── PASO 1: Colector ── */}
+      <Section step={1} title="Colector">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {sellers.map((seller) => {
             const active = selectedSeller === seller
