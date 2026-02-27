@@ -2,22 +2,23 @@
 -- Run this once in your Neon SQL Editor before deploying
 
 CREATE TABLE IF NOT EXISTS orders (
-  id            SERIAL PRIMARY KEY,
-  order_number  VARCHAR(30)    UNIQUE NOT NULL,
-  country       VARCHAR(100)   NOT NULL,
-  country_slug  VARCHAR(50)    NOT NULL,
-  game_username VARCHAR(100)   NOT NULL,
-  customer_contact VARCHAR(100) NOT NULL,
-  package_id    VARCHAR(30)    NOT NULL,
-  package_coins INTEGER        NOT NULL,
-  package_price DECIMAL(14, 2) NOT NULL,
-  currency_code VARCHAR(10)    NOT NULL,
-  currency_symbol VARCHAR(10)  NOT NULL,
-  is_custom     BOOLEAN        NOT NULL DEFAULT false,
-  status        VARCHAR(20)    NOT NULL DEFAULT 'pending',
-  notes         TEXT,
-  created_at    TIMESTAMPTZ    DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ    DEFAULT NOW()
+  id              SERIAL PRIMARY KEY,
+  order_number    VARCHAR(30)    UNIQUE NOT NULL,
+  country         VARCHAR(100)   NOT NULL,
+  country_slug    VARCHAR(50)    NOT NULL,
+  game_username   VARCHAR(100)   NOT NULL,
+  seller          VARCHAR(100)   NOT NULL,
+  package_id      VARCHAR(30)    NOT NULL,
+  package_coins   INTEGER        NOT NULL,
+  package_price   DECIMAL(14, 2) NOT NULL,
+  currency_code   VARCHAR(10)    NOT NULL,
+  currency_symbol VARCHAR(10)    NOT NULL,
+  is_custom       BOOLEAN        NOT NULL DEFAULT false,
+  coin_account    VARCHAR(20)    NOT NULL,
+  registered_by   TEXT,
+  status          VARCHAR(20)    NOT NULL DEFAULT 'pending',
+  created_at      TIMESTAMPTZ    DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ    DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_order_number  ON orders (order_number);

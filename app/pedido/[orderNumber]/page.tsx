@@ -64,7 +64,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
             Resumen del pedido
           </p>
           <div className="space-y-3 text-sm">
-            <Row label="Vendedor" value={order.seller ?? order.customer_contact} />
+            <Row label="Vendedor" value={order.seller} />
             <Row label="País" value={`${country.flag} ${order.country}`} />
             <Row
               label="Paquete"

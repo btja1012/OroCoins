@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
       countrySlug: country.slug,
       gameUsername: gameUsername.trim(),
       seller,
-      clientName: seller,
       registeredBy: session.sellerName ?? session.username,
       packageId: pkg.id,
       packageCoins: pkg.coins,

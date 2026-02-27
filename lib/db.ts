@@ -14,9 +14,7 @@ export interface Order {
   country: string
   country_slug: string
   game_username: string
-  customer_contact: string
   seller: string
-  client_name: string | null
   package_id: string
   package_coins: number
   package_price: number
@@ -34,7 +32,6 @@ export async function createOrder(data: {
   countrySlug: string
   gameUsername: string
   seller: string
-  clientName?: string | null
   packageId: string
   packageCoins: number
   packagePrice: number
@@ -52,11 +49,11 @@ export async function createOrder(data: {
   const [orders] = await db.transaction([
     db`
       INSERT INTO orders (
-        order_number, country, country_slug, game_username, customer_contact,
-        seller, client_name, package_id, package_coins, package_price, currency_code, currency_symbol, is_custom, coin_account, registered_by
+        order_number, country, country_slug, game_username,
+        seller, package_id, package_coins, package_price, currency_code, currency_symbol, is_custom, coin_account, registered_by
       ) VALUES (
         ${orderNumber}, ${data.country}, ${data.countrySlug}, ${data.gameUsername},
-        ${data.seller}, ${data.seller}, ${data.clientName ?? null}, ${data.packageId}, ${data.packageCoins},
+        ${data.seller}, ${data.packageId}, ${data.packageCoins},
         ${data.packagePrice}, ${data.currencyCode}, ${data.currencySymbol},
         ${data.isCustom ?? false}, ${data.coinAccount}, ${data.registeredBy ?? null}
       )
