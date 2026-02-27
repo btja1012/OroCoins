@@ -87,9 +87,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ orderNumber: order.order_number }, { status: 201 })
   } catch (err) {
     console.error('Error creating order:', err)
-    return NextResponse.json(
-      { error: 'Error interno del servidor. Intenta de nuevo.' },
-      { status: 500 },
-    )
+    const message = err instanceof Error ? err.message : 'Error interno del servidor. Intenta de nuevo.'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

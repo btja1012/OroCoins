@@ -7,6 +7,8 @@ export interface AdminUser {
   role: 'super_admin' | 'admin' | 'seller'
   seller_name?: string
   is_active: boolean
+  failed_attempts: number
+  locked_until?: string | null
 }
 
 export interface SellerStat {

@@ -46,7 +46,7 @@ export async function createOrder(data: {
   const rnd = Math.random().toString(36).substring(2, 6).toUpperCase()
   const orderNumber = `OC-${ts}-${rnd}`
 
-  const [orders] = await db.transaction([
+  const [orders, accountUpdate] = await db.transaction([
     db`
       INSERT INTO orders (
         order_number, country, country_slug, game_username,
@@ -62,9 +62,14 @@ export async function createOrder(data: {
     db`
       UPDATE coin_accounts
       SET current_balance = current_balance - ${data.packageCoins}, updated_at = NOW()
-      WHERE name = ${data.coinAccount}
+      WHERE name = ${data.coinAccount} AND current_balance >= ${data.packageCoins}
+      RETURNING name
     `,
   ])
+
+  if (!accountUpdate || accountUpdate.length === 0) {
+    throw new Error('Saldo insuficiente en la cuenta de Oros seleccionada.')
+  }
 
   return orders[0] as Order
 }
