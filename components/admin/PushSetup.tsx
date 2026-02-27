@@ -92,18 +92,9 @@ export function PushSetup() {
 
   if (status === 'granted') {
     return (
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
-          <Bell size={12} />
-          <span>Activas</span>
-        </div>
-        <button
-          onClick={testPush}
-          disabled={loading}
-          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 px-2 py-1 rounded-lg transition-all disabled:opacity-50"
-        >
-          {loading ? '...' : 'Probar'}
-        </button>
+      <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
+        <Bell size={12} />
+        <span>Activas</span>
       </div>
     )
   }
