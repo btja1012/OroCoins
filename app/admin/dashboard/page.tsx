@@ -16,6 +16,7 @@ import { LogoutButton } from '@/components/admin/LogoutButton'
 import { PushSetup } from '@/components/admin/PushSetup'
 import { OrderActions } from '@/components/admin/OrderActions'
 import { DashboardCharts } from '@/components/admin/DashboardCharts'
+import { AutoRefresh } from '@/components/admin/AutoRefresh'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -42,6 +43,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-black">
+      <AutoRefresh intervalMs={30000} />
       {/* Header */}
       <header className="sticky top-0 z-10 bg-black/95 backdrop-blur border-b border-amber-500/20">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
