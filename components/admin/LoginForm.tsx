@@ -30,7 +30,11 @@ export function LoginForm() {
         return
       }
 
-      router.push('/admin/dashboard')
+      if (data.role === 'seller') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/')
+      }
       router.refresh()
     } catch {
       setError('Error de conexión.')

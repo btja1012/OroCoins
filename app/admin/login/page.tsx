@@ -6,7 +6,10 @@ export const metadata = { title: 'Admin — Oros Pura Vida' }
 
 export default async function LoginPage() {
   const session = await getSession()
-  if (session) redirect('/admin/dashboard')
+  if (session) {
+    if (session.role === 'seller') redirect('/admin/dashboard')
+    else redirect('/')
+  }
 
   return (
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
