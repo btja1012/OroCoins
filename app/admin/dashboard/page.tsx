@@ -8,6 +8,7 @@ import {
   getRecentOrders,
   getSellerOrders,
   getCoinAccounts,
+  getRegistrarStats,
 } from '@/lib/admin-db'
 import { countries, formatPrice, formatCoins } from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
@@ -22,7 +23,7 @@ export const metadata = { title: 'Dashboard — Oros Pura Vida' }
 const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin',
   admin: 'Admin',
-  seller: 'Vendedor',
+  seller: 'Agente',
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -170,11 +171,12 @@ async function SellerView({ sellerName }: { sellerName: string }) {
 
 /* ─────────────────── ADMIN VIEW ─────────────────── */
 async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
-  const [globalStats, sellerStats, recentOrders, coinAccounts] = await Promise.all([
+  const [globalStats, sellerStats, recentOrders, coinAccounts, registrarStats] = await Promise.all([
     getGlobalStats(),
     getAllSellerStats(),
     getRecentOrders(100),
     getCoinAccounts(),
+    getRegistrarStats(),
   ])
 
   const totalCoinsSold = Number(globalStats.total_coins_sold)
@@ -223,10 +225,30 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         )}
       </div>
 
-      {/* Per-seller breakdown */}
+      {/* Sales by registrar (Maga / Neme) */}
+      {registrarStats.length > 0 && (
+        <div>
+          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
+            Ventas por vendedor
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {registrarStats.map((r) => (
+              <div key={r.registered_by} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+                <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">{r.registered_by}</p>
+                <p className="text-3xl font-black text-amber-400">
+                  {formatCoins(Number(r.total_coins))}<span className="text-lg ml-1">🪙</span>
+                </p>
+                <p className="text-zinc-500 text-sm mt-1">{r.order_count} pedidos registrados</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Per-agent breakdown */}
       <div>
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
-          Resumen por vendedor
+          Resumen por agente
         </h3>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
           {sellerStats.length === 0 ? (

@@ -40,6 +40,27 @@ export async function getUserByUsername(username: string): Promise<AdminUser | n
   return (result[0] as AdminUser) ?? null
 }
 
+export interface RegistrarStat {
+  registered_by: string
+  order_count: number
+  total_coins: number
+}
+
+export async function getRegistrarStats(): Promise<RegistrarStat[]> {
+  const db = sql()
+  const result = await db`
+    SELECT
+      registered_by,
+      COUNT(*)::int AS order_count,
+      COALESCE(SUM(package_coins), 0)::bigint AS total_coins
+    FROM orders
+    WHERE registered_by IS NOT NULL
+    GROUP BY registered_by
+    ORDER BY order_count DESC
+  `
+  return result as RegistrarStat[]
+}
+
 export async function getAllSellerStats(): Promise<SellerStat[]> {
   const db = sql()
   const result = await db`

@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createOrder, sql } from '@/lib/db'
 import { getCountry, sellers, sellerCountryMap, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
 import { sendPushToRolesAndSeller } from '@/lib/push'
+import { getSession } from '@/lib/session'
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session || session.role === 'seller') {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount } = body
 
@@ -63,6 +69,7 @@ export async function POST(request: NextRequest) {
       gameUsername: gameUsername.trim(),
       seller,
       clientName: seller,
+      registeredBy: session.sellerName ?? session.username,
       packageId: pkg.id,
       packageCoins: pkg.coins,
       packagePrice: pkg.price,
