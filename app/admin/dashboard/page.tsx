@@ -308,10 +308,9 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     <th className="text-left px-4 py-3"># Orden</th>
                     <th className="text-left px-4 py-3">Colector</th>
                     <th className="text-left px-4 py-3">País</th>
-                    <th className="text-right px-4 py-3">Monedas</th>
                     <th className="text-right px-4 py-3">Monto</th>
                     <th className="text-left px-4 py-3">Comprobante</th>
-                    <th className="text-left px-4 py-3">Cliente</th>
+                    <th className="text-left px-4 py-3">Vendedor</th>
                     <th className="text-right px-4 py-3">Fecha</th>
                     <th className="text-center px-4 py-3">Estado</th>
                     <th className="px-4 py-3"></th>
@@ -325,14 +324,11 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         <td className="px-4 py-3 font-mono text-amber-400 text-xs">{order.order_number}</td>
                         <td className="px-4 py-3 text-zinc-300 font-medium">{order.seller ?? '—'}</td>
                         <td className="px-4 py-3 text-zinc-400">{country?.flag} {order.country}</td>
-                        <td className="px-4 py-3 text-right text-amber-400 font-bold">
-                          {formatCoins(Number(order.package_coins))} 🪙
-                        </td>
                         <td className="px-4 py-3 text-right text-white font-semibold">
                           {formatPrice(Number(order.package_price), order.currency_code)}
                         </td>
                         <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{order.game_username}</td>
-                        <td className="px-4 py-3 text-zinc-300 text-xs font-medium">{order.client_name ?? '—'}</td>
+                        <td className="px-4 py-3 text-zinc-300 text-xs font-medium">{order.registered_by ?? '—'}</td>
                         <td className="px-4 py-3 text-right text-zinc-500 text-xs">
                           {new Date(order.created_at).toLocaleDateString('es', {
                             day: '2-digit', month: 'short', year: '2-digit',
