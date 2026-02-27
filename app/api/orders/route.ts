@@ -7,7 +7,7 @@ import { getSession } from '@/lib/session'
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
-    if (!session || session.role === 'seller') {
+    if (!session || !['admin', 'super_admin'].includes(session.role)) {
       return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
     }
 
