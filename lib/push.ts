@@ -11,15 +11,19 @@ function initWebPush() {
 export async function sendPushToRolesAndSeller(sellerName: string, payload: {
   title: string
   body: string
-}) {
+}, clientName?: string | null) {
   try {
     initWebPush()
     const db = sql()
 
-    // Get user IDs: the specific seller + all admins/super_admins
+    // Get user IDs: the specific seller + all admins/super_admins + optional client
     const users = await db`
       SELECT id FROM admin_users
-      WHERE (seller_name = ${sellerName} OR role IN ('admin', 'super_admin'))
+      WHERE (
+        seller_name = ${sellerName}
+        OR role IN ('admin', 'super_admin')
+        ${clientName ? db`OR seller_name = ${clientName}` : db``}
+      )
       AND is_active = true
     `
 

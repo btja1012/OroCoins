@@ -26,6 +26,7 @@ export function OrderForm() {
   const [isCustomSelected, setIsCustomSelected] = useState(false)
   const [gameUsername, setGameUsername] = useState('')
   const [coinAccount, setCoinAccount] = useState<'OrosPV1' | 'OrosPV2' | null>(null)
+  const [clientName, setClientName] = useState<Seller | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -92,6 +93,7 @@ export function OrderForm() {
         seller: selectedSeller,
         gameUsername: gameUsername.trim(),
         coinAccount,
+        clientName: clientName ?? null,
       }
 
       if (selectedPackage) {
@@ -261,6 +263,29 @@ export function OrderForm() {
                     }`}
                 >
                   {acc}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notificar a */}
+          <div className="mb-4">
+            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">
+              Notificar a (opcional)
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {sellers.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setClientName(clientName === s ? null : s)}
+                  className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all
+                    ${clientName === s
+                      ? 'bg-amber-500 border-amber-500 text-black'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
+                    }`}
+                >
+                  {s}
                 </button>
               ))}
             </div>

@@ -278,6 +278,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     <th className="text-right px-4 py-3">Monedas</th>
                     <th className="text-right px-4 py-3">Monto</th>
                     <th className="text-left px-4 py-3">Comprobante</th>
+                    <th className="text-left px-4 py-3">Cliente</th>
                     <th className="text-right px-4 py-3">Fecha</th>
                     <th className="text-center px-4 py-3">Estado</th>
                     <th className="px-4 py-3"></th>
@@ -298,6 +299,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                           {formatPrice(Number(order.package_price), order.currency_code)}
                         </td>
                         <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{order.game_username}</td>
+                        <td className="px-4 py-3 text-zinc-300 text-xs font-medium">{order.client_name ?? '—'}</td>
                         <td className="px-4 py-3 text-right text-zinc-500 text-xs">
                           {new Date(order.created_at).toLocaleDateString('es', {
                             day: '2-digit', month: 'short', year: '2-digit',

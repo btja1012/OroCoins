@@ -16,6 +16,7 @@ export interface Order {
   game_username: string
   customer_contact: string
   seller: string
+  client_name: string | null
   package_id: string
   package_coins: number
   package_price: number
@@ -32,6 +33,7 @@ export async function createOrder(data: {
   countrySlug: string
   gameUsername: string
   seller: string
+  clientName?: string | null
   packageId: string
   packageCoins: number
   packagePrice: number
@@ -49,10 +51,10 @@ export async function createOrder(data: {
     db`
       INSERT INTO orders (
         order_number, country, country_slug, game_username, customer_contact,
-        seller, package_id, package_coins, package_price, currency_code, currency_symbol, is_custom, coin_account
+        seller, client_name, package_id, package_coins, package_price, currency_code, currency_symbol, is_custom, coin_account
       ) VALUES (
         ${orderNumber}, ${data.country}, ${data.countrySlug}, ${data.gameUsername},
-        ${data.seller}, ${data.seller}, ${data.packageId}, ${data.packageCoins},
+        ${data.seller}, ${data.seller}, ${data.clientName ?? null}, ${data.packageId}, ${data.packageCoins},
         ${data.packagePrice}, ${data.currencyCode}, ${data.currencySymbol},
         ${data.isCustom ?? false}, ${data.coinAccount}
       )
