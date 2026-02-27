@@ -310,6 +310,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     <th className="text-left px-4 py-3"># Orden</th>
                     <th className="text-left px-4 py-3">Colector</th>
                     <th className="text-left px-4 py-3">País</th>
+                    <th className="text-right px-4 py-3">Monedas</th>
                     <th className="text-right px-4 py-3">Monto</th>
                     <th className="text-left px-4 py-3">Comprobante</th>
                     <th className="text-left px-4 py-3">Vendedor</th>
@@ -326,6 +327,10 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                         <td className="px-4 py-3 font-mono text-amber-400 text-xs">{order.order_number}</td>
                         <td className="px-4 py-3 text-zinc-300 font-medium">{order.seller ?? '—'}</td>
                         <td className="px-4 py-3 text-zinc-400">{country?.flag} {order.country}</td>
+                        <td className="px-4 py-3 text-right text-amber-400 font-bold">
+                          {formatCoins(order.package_coins)} 🪙
+                          {order.is_custom && <span className="text-zinc-600 text-xs ml-1">(custom)</span>}
+                        </td>
                         <td className="px-4 py-3 text-right text-white font-semibold">
                           {formatPrice(Number(order.package_price), order.currency_code)}
                         </td>
