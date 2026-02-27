@@ -9,14 +9,6 @@ import { formatCoins } from '@/lib/data'
 
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f97316']
 
-const COIN_RATES: Record<string, number> = {
-  CRC: 1 / 530,   // colones → USD
-  MXN: 1 / 17,
-  COP: 1 / 4200,
-  VES: 1 / 36,
-  USD: 1,
-}
-
 interface Props {
   sellerStats: SellerStat[]
   totalCoinsSold: number
@@ -24,16 +16,9 @@ interface Props {
 }
 
 export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }: Props) {
-  // Data for donut chart — coins sold per seller
   const coinData = sellerStats.map((s) => ({
     name: s.seller,
-    value: Number(s.total_coins),
-  }))
-
-  // Data for bar chart — revenue per seller in USD approx
-  const revenueData = sellerStats.map((s) => ({
-    name: s.seller,
-    usd: Math.round(Number(s.total_amount) * (COIN_RATES[s.currency_code] ?? 1)),
+    coins: Number(s.total_coins),
     pedidos: Number(s.order_count),
   }))
 
@@ -66,10 +51,10 @@ export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }:
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* ── Donut: coins per seller ── */}
+        {/* ── Donut: coins per colector ── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Monedas vendidas por vendedor
+            Monedas por colector
           </p>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
@@ -80,7 +65,7 @@ export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }:
                 innerRadius={55}
                 outerRadius={90}
                 paddingAngle={3}
-                dataKey="value"
+                dataKey="coins"
               >
                 {coinData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -92,7 +77,6 @@ export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }:
               />
             </PieChart>
           </ResponsiveContainer>
-          {/* Legend */}
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2">
             {coinData.map((d, i) => (
               <div key={d.name} className="flex items-center gap-1.5 text-xs text-zinc-400">
@@ -103,22 +87,27 @@ export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }:
           </div>
         </div>
 
-        {/* ── Bar: revenue in USD ── */}
+        {/* ── Bar: coins per colector ── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Recaudado por vendedor (aprox. USD)
+            Monedas vendidas por colector
           </p>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={revenueData} barSize={28}>
+            <BarChart data={coinData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
               <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
+              <YAxis
+                tick={{ fill: '#71717a', fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+              />
               <Tooltip
                 contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 12, fontSize: 12 }}
-                formatter={(v: number | undefined) => [`$${v ?? 0} USD`, 'Recaudado']}
+                formatter={(v: number | undefined) => [formatCoins(v ?? 0) + ' 🪙', 'Monedas']}
               />
-              <Bar dataKey="usd" radius={[6, 6, 0, 0]}>
-                {revenueData.map((_, i) => (
+              <Bar dataKey="coins" radius={[6, 6, 0, 0]}>
+                {coinData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Bar>
@@ -126,13 +115,13 @@ export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }:
           </ResponsiveContainer>
         </div>
 
-        {/* ── Bar: orders per seller ── */}
+        {/* ── Bar: orders per colector ── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 lg:col-span-2">
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Pedidos registrados por vendedor
+            Pedidos por colector
           </p>
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={revenueData} barSize={36} layout="vertical">
+            <BarChart data={coinData} barSize={36} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis dataKey="name" type="category" tick={{ fill: '#a1a1aa', fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} width={60} />
@@ -141,7 +130,7 @@ export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }:
                 formatter={(v: number | undefined) => [v ?? 0, 'Pedidos']}
               />
               <Bar dataKey="pedidos" radius={[0, 6, 6, 0]}>
-                {revenueData.map((_, i) => (
+                {coinData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Bar>
