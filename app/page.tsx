@@ -11,7 +11,7 @@ export default async function HomePage() {
   if (session.role === 'seller') redirect('/admin/dashboard')
 
   return (
-    <main className="min-h-screen bg-zinc-950">
+    <main className="min-h-screen bg-black">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
 
         {/* Header */}

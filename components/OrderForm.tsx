@@ -184,7 +184,7 @@ export function OrderForm() {
           </div>
 
           {/* Calculadora personalizada */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4">
             <p className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-3">
               Monto personalizado
             </p>
@@ -277,7 +277,7 @@ export function OrderForm() {
               onChange={(e) => setGameUsername(e.target.value)}
               placeholder="Número o referencia del comprobante"
               maxLength={100}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700 focus:outline-none focus:border-zinc-600"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700 focus:outline-none focus:border-zinc-600"
             />
           </div>
 
@@ -311,7 +311,7 @@ export function OrderForm() {
 /* ── Componente de sección con paso numerado ── */
 function Section({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
+    <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
       <div className="flex items-center gap-3 mb-4">
         <span className="w-6 h-6 rounded-full bg-amber-500 text-black text-xs font-black flex items-center justify-center shrink-0">
           {step}

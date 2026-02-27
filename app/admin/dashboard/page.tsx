@@ -41,9 +41,9 @@ export default async function DashboardPage() {
   const isSeller = session.role === 'seller'
 
   return (
-    <main className="min-h-screen bg-zinc-950">
+    <main className="min-h-screen bg-black">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-zinc-950/90 backdrop-blur border-b border-zinc-900">
+      <header className="sticky top-0 z-10 bg-black/95 backdrop-blur border-b border-amber-500/20">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/" className="text-lg font-black text-white">
@@ -119,14 +119,14 @@ async function SellerView({ sellerName }: { sellerName: string }) {
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
           Comprobantes registrados
         </h3>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
           {orders.length === 0 ? (
             <p className="text-zinc-600 text-center py-12">No hay pedidos registrados aún.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wider">
+                  <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
                     <th className="text-left px-4 py-3">Ref. Comprobante</th>
                     <th className="text-right px-4 py-3">Monedas</th>
                     <th className="text-right px-4 py-3">Monto</th>
@@ -137,7 +137,7 @@ async function SellerView({ sellerName }: { sellerName: string }) {
                 </thead>
                 <tbody>
                   {(orders as Order[]).map((order) => (
-                    <tr key={order.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                    <tr key={order.id} className="border-b border-zinc-900 hover:bg-amber-500/5 transition-colors">
                       <td className="px-4 py-3 font-mono text-zinc-300">{order.game_username}</td>
                       <td className="px-4 py-3 text-right text-amber-400 font-bold">
                         {formatCoins(order.package_coins)} 🪙
@@ -214,7 +214,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {coinAccounts.map((account) => (
-              <div key={account.name} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+              <div key={account.name} className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
                 <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">{account.name}</p>
                 <p className="text-3xl font-black text-amber-400">
                   {formatCoins(Number(account.current_balance))}<span className="text-lg ml-1">🪙</span>
@@ -234,7 +234,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {registrarStats.map((r) => (
-              <div key={r.registered_by} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+              <div key={r.registered_by} className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
                 <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">{r.registered_by}</p>
                 <p className="text-3xl font-black text-amber-400">
                   {formatCoins(Number(r.total_coins))}<span className="text-lg ml-1">🪙</span>
@@ -251,14 +251,14 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
           Resumen por colector
         </h3>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
           {sellerStats.length === 0 ? (
             <p className="text-zinc-600 text-center py-12">No hay registros aún.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wider">
+                  <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
                     <th className="text-left px-4 py-3">Colector</th>
                     <th className="text-left px-4 py-3">País</th>
                     <th className="text-right px-4 py-3">Pedidos</th>
@@ -270,7 +270,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                   {sellerStats.map((s) => {
                     const country = countries.find((c) => c.slug === s.country_slug)
                     return (
-                      <tr key={s.seller} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+                      <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
                         <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
                         <td className="px-4 py-3 text-zinc-400">
                           {country?.flag} {s.country}
@@ -297,14 +297,14 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
           Pedidos recientes
         </h3>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
           {recentOrders.length === 0 ? (
             <p className="text-zinc-600 text-center py-12">No hay pedidos.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wider">
+                  <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
                     <th className="text-left px-4 py-3"># Orden</th>
                     <th className="text-left px-4 py-3">Colector</th>
                     <th className="text-left px-4 py-3">País</th>
@@ -320,7 +320,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                   {(recentOrders as Order[]).map((order) => {
                     const country = countries.find((c) => c.slug === order.country_slug)
                     return (
-                      <tr key={order.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
+                      <tr key={order.id} className="border-b border-zinc-900 hover:bg-amber-500/5">
                         <td className="px-4 py-3 font-mono text-amber-400 text-xs">{order.order_number}</td>
                         <td className="px-4 py-3 text-zinc-300 font-medium">{order.seller ?? '—'}</td>
                         <td className="px-4 py-3 text-zinc-400">{country?.flag} {order.country}</td>
@@ -363,7 +363,7 @@ function StatCard({
   accent?: boolean
 }) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+    <div className="bg-zinc-950 border border-amber-500/15 rounded-2xl p-5 hover:border-amber-500/30 transition-colors">
       <p className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">{label}</p>
       <p className={`text-2xl font-black ${accent ? 'text-amber-400' : 'text-white'}`}>{value}</p>
       {sub && <p className="text-zinc-600 text-xs mt-1">{sub}</p>}
@@ -373,9 +373,9 @@ function StatCard({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    pending: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-    completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    cancelled: 'bg-red-500/10 text-red-400 border-red-500/20',
+    pending: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+    completed: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    cancelled: 'bg-red-500/10 text-red-400 border-red-500/30',
   }
   const labels: Record<string, string> = {
     pending: 'Pendiente',

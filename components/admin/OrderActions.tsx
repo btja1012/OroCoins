@@ -30,7 +30,7 @@ export function OrderActions({ orderNumber, status }: { orderNumber: string; sta
         onClick={() => update('completed')}
         disabled={loading !== null}
         title="Aprobar"
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 transition-colors disabled:opacity-50 text-xs font-semibold"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 transition-colors disabled:opacity-50 text-xs font-semibold"
       >
         {loading === 'completed' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
         <span className="hidden sm:inline">Aprobar</span>

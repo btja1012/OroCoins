@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.className} min-h-screen bg-zinc-950 text-zinc-100 antialiased`}>
+      <body className={`${inter.className} min-h-screen bg-black text-white antialiased`}>
         {children}
       </body>
     </html>
