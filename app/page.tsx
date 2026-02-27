@@ -8,7 +8,7 @@ export default async function HomePage() {
   const session = await getSession()
 
   if (!session) redirect('/admin/login')
-  if (session.role === 'seller') redirect('/admin/dashboard')
+  if (session.role === 'seller' || session.role === 'demo') redirect('/admin/dashboard')
 
   return (
     <main className="min-h-screen bg-black">

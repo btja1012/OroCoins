@@ -30,7 +30,7 @@ export function LoginForm() {
         return
       }
 
-      if (data.role === 'seller') {
+      if (data.role === 'seller' || data.role === 'demo') {
         router.push('/admin/dashboard')
       } else {
         router.push('/')
