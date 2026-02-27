@@ -65,6 +65,51 @@ export async function sendPushToRolesAndSeller(sellerName: string, payload: {
   }
 }
 
+export async function sendPushToAll(payload: {
+  title: string
+  body: string
+}) {
+  try {
+    const ready = initWebPush()
+    if (!ready) return
+
+    const db = sql()
+    const users = await db`
+      SELECT id, username FROM admin_users WHERE is_active = true
+    `
+
+    console.log(`[push] Sending to all ${users.length} active user(s)`)
+
+    for (const user of users) {
+      const subs = await db`
+        SELECT * FROM push_subscriptions WHERE user_id = ${user.id}
+      `
+      console.log(`[push] User ${user.username} has ${subs.length} subscription(s)`)
+
+      for (const sub of subs) {
+        try {
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            JSON.stringify(payload)
+          )
+          console.log(`[push] ✓ Sent to ${user.username}`)
+        } catch (err: unknown) {
+          const statusCode = err && typeof err === 'object' && 'statusCode' in err
+            ? (err as { statusCode: number }).statusCode
+            : null
+          console.error(`[push] ✗ Failed for ${user.username}: status=${statusCode}`, err)
+          if (statusCode === 410) {
+            await db`DELETE FROM push_subscriptions WHERE id = ${sub.id}`
+            console.log(`[push] Removed expired subscription for ${user.username}`)
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[push] Unexpected error in sendPushToAll:', err)
+  }
+}
+
 export async function sendPushToUser(userId: number, payload: {
   title: string
   body: string
