@@ -65,7 +65,7 @@ export async function sendPushToRolesAndSeller(sellerName: string, payload: {
   }
 }
 
-export async function sendPushToAll(payload: {
+export async function sendPushToSeller(sellerName: string, payload: {
   title: string
   body: string
 }) {
@@ -75,10 +75,11 @@ export async function sendPushToAll(payload: {
 
     const db = sql()
     const users = await db`
-      SELECT id, username FROM admin_users WHERE is_active = true
+      SELECT id, username FROM admin_users
+      WHERE seller_name = ${sellerName} AND is_active = true
     `
 
-    console.log(`[push] Sending to all ${users.length} active user(s)`)
+    console.log(`[push] Sending to ${users.length} user(s) for seller=${sellerName}`)
 
     for (const user of users) {
       const subs = await db`
@@ -106,7 +107,7 @@ export async function sendPushToAll(payload: {
       }
     }
   } catch (err) {
-    console.error('[push] Unexpected error in sendPushToAll:', err)
+    console.error('[push] Unexpected error in sendPushToSeller:', err)
   }
 }
 

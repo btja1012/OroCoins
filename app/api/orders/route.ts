@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder, sql } from '@/lib/db'
 import { getCountry, sellers, sellerCountryMap, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
-import { sendPushToAll } from '@/lib/push'
+import { sendPushToSeller } from '@/lib/push'
 import { getSession } from '@/lib/session'
 
 export async function POST(request: NextRequest) {
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     })
 
     // ── Push notification (non-blocking) ──
-    sendPushToAll({
+    sendPushToSeller(seller, {
       title: `🪙 Nuevo pedido — ${country.flag} ${seller}`,
       body: `${formatCoins(pkg.coins)} 🪙 · ${formatPrice(pkg.price, country.currencyCode)} · Ref: ${gameUsername.trim()}`,
     })
