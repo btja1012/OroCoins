@@ -19,9 +19,38 @@ export function PushSetup() {
       setStatus('unsupported')
       return
     }
-    if (Notification.permission === 'granted') setStatus('granted')
-    else if (Notification.permission === 'denied') setStatus('denied')
+    if (Notification.permission === 'denied') {
+      setStatus('denied')
+      return
+    }
+    if (Notification.permission === 'granted') {
+      setStatus('granted')
+      // Re-sync subscription on every load to keep it fresh
+      syncSubscription()
+    }
   }, [])
+
+  const syncSubscription = async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.ready
+      const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+      let sub = await reg.pushManager.getSubscription()
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(pub),
+        })
+      }
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sub),
+      })
+    } catch {
+      // Silent — don't break the UI
+    }
+  }
 
   const subscribe = async () => {
     setLoading(true)

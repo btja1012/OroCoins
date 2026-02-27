@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
     await db`
       INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
       VALUES (${session.id}, ${sub.endpoint}, ${sub.keys.p256dh}, ${sub.keys.auth})
-      ON CONFLICT (user_id, endpoint) DO NOTHING
+      ON CONFLICT (user_id, endpoint) DO UPDATE
+        SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth
     `
     return NextResponse.json({ ok: true })
   } catch (err) {
