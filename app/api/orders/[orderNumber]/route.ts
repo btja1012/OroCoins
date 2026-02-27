@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrderByNumber, sql } from '@/lib/db'
 import { getSession } from '@/lib/session'
+import { sendPushToAdmins, sendPushToSeller } from '@/lib/push'
 
 export async function GET(
   _request: NextRequest,
@@ -43,13 +44,33 @@ export async function PUT(
       }
     }
 
-    await db`
+    const updated = await db`
       UPDATE orders
       SET status = ${status}, updated_at = NOW(),
           approved_by = ${session.sellerName ?? session.username},
           approved_at = NOW()
       WHERE order_number = ${orderNumber}
+      RETURNING seller, package_coins, currency_code
     `
+
+    // Push notification on approval/rejection (non-blocking)
+    if (updated[0]) {
+      const { seller, package_coins, currency_code } = updated[0]
+      const action = status === 'completed' ? 'aprobado' : 'rechazado'
+      const approver = session.sellerName ?? session.username
+      const payload = {
+        title: `${status === 'completed' ? '✅' : '❌'} Pedido ${action}`,
+        body: `${approver} ${action} ${package_coins} 🪙 (${orderNumber})`,
+      }
+      if (isAdmin) {
+        // Admin approved → notify the colector
+        sendPushToSeller(seller, payload)
+      } else {
+        // Colector approved → notify all admins
+        sendPushToAdmins(session.username, payload)
+      }
+    }
+
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('Error updating order:', err)

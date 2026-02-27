@@ -136,13 +136,37 @@ export async function getCoinAccounts(): Promise<CoinAccount[]> {
   return result as CoinAccount[]
 }
 
-export async function updateCoinAccountBalance(name: string, balance: number): Promise<void> {
+export interface CoinAccountHistoryEntry {
+  id: number
+  account_name: string
+  prev_balance: number
+  new_balance: number
+  changed_by: string
+  changed_at: string
+}
+
+export async function updateCoinAccountBalance(name: string, balance: number, changedBy: string): Promise<void> {
   const db = sql()
+  const current = await db`SELECT current_balance FROM coin_accounts WHERE name = ${name} LIMIT 1`
+  const prev = current[0]?.current_balance ?? 0
   await db`
     UPDATE coin_accounts
     SET current_balance = ${balance}, updated_at = NOW()
     WHERE name = ${name}
   `
+  await db`
+    INSERT INTO coin_account_history (account_name, prev_balance, new_balance, changed_by)
+    VALUES (${name}, ${prev}, ${balance}, ${changedBy})
+  `
+}
+
+export async function getCoinAccountHistory(limit = 20): Promise<CoinAccountHistoryEntry[]> {
+  const db = sql()
+  const result = await db`
+    SELECT * FROM coin_account_history
+    ORDER BY changed_at DESC LIMIT ${limit}
+  `
+  return result as CoinAccountHistoryEntry[]
 }
 
 export async function createAdminUser(data: {

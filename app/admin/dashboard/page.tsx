@@ -9,6 +9,7 @@ import {
   getSellerOrders,
   getCoinAccounts,
   getRegistrarStats,
+  getCoinAccountHistory,
 } from '@/lib/admin-db'
 import { countries, formatPrice, formatCoins, sellers } from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
@@ -173,12 +174,13 @@ async function SellerView({ sellerName }: { sellerName: string }) {
 
 /* ─────────────────── ADMIN VIEW ─────────────────── */
 async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
-  const [globalStats, sellerStats, recentOrders, coinAccounts, registrarStats] = await Promise.all([
+  const [globalStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory] = await Promise.all([
     getGlobalStats(),
     getAllSellerStats(),
-    getRecentOrders(100),
+    getRecentOrders(200),
     getCoinAccounts(),
     getRegistrarStats(),
+    getCoinAccountHistory(30),
   ])
 
   const totalCoinsSold = Number(globalStats.total_coins_sold)
@@ -227,6 +229,53 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           </div>
         )}
       </div>
+
+      {/* Coin account history — super admin only */}
+      {isSuperAdmin && coinHistory.length > 0 && (
+        <div>
+          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
+            Historial de cuentas de Oros
+          </h3>
+          <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
+                    <th className="text-left px-4 py-3">Cuenta</th>
+                    <th className="text-right px-4 py-3">Anterior</th>
+                    <th className="text-right px-4 py-3">Nuevo</th>
+                    <th className="text-right px-4 py-3">Diferencia</th>
+                    <th className="text-left px-4 py-3">Modificado por</th>
+                    <th className="text-right px-4 py-3">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coinHistory.map((h) => {
+                    const diff = h.new_balance - h.prev_balance
+                    return (
+                      <tr key={h.id} className="border-b border-zinc-900 hover:bg-amber-500/5">
+                        <td className="px-4 py-3 font-medium text-zinc-300">{h.account_name}</td>
+                        <td className="px-4 py-3 text-right text-zinc-500">{formatCoins(Number(h.prev_balance))} 🪙</td>
+                        <td className="px-4 py-3 text-right text-white font-semibold">{formatCoins(Number(h.new_balance))} 🪙</td>
+                        <td className={`px-4 py-3 text-right font-bold ${diff >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {diff >= 0 ? '+' : ''}{formatCoins(diff)} 🪙
+                        </td>
+                        <td className="px-4 py-3 text-zinc-400 text-xs">{h.changed_by}</td>
+                        <td className="px-4 py-3 text-right text-zinc-500 text-xs">
+                          {new Date(h.changed_at).toLocaleString('es', {
+                            day: '2-digit', month: 'short', year: '2-digit',
+                            hour: '2-digit', minute: '2-digit',
+                          })}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sales by registrar (Maga / Neme) */}
       {registrarStats.length > 0 && (

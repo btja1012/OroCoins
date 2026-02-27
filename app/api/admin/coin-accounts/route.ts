@@ -23,6 +23,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 })
   }
 
-  await updateCoinAccountBalance(name, balance)
+  await updateCoinAccountBalance(name, balance, session.username)
   return NextResponse.json({ ok: true })
 }

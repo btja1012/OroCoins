@@ -59,12 +59,16 @@ function exportCSV(orders: Order[]) {
   URL.revokeObjectURL(url)
 }
 
+const PAGE_SIZE = 25
+
 export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: string[] }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sellerFilter, setSellerFilter] = useState('all')
+  const [page, setPage] = useState(1)
 
   const filtered = useMemo(() => {
+    setPage(1)
     return orders.filter((o) => {
       if (statusFilter !== 'all' && o.status !== statusFilter) return false
       if (sellerFilter !== 'all' && o.seller !== sellerFilter) return false
@@ -78,6 +82,9 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
       return true
     })
   }, [orders, statusFilter, sellerFilter, search])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="space-y-3">
@@ -152,7 +159,7 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((order) => {
+                {paginated.map((order) => {
                   const country = countries.find((c) => c.slug === order.country_slug)
                   return (
                     <tr key={order.id} className="border-b border-zinc-900 hover:bg-amber-500/5">
@@ -194,6 +201,32 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-xs text-zinc-500">
+          <span>
+            Mostrando {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} de {filtered.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              ← Anterior
+            </button>
+            <span className="px-2">{page} / {totalPages}</span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Siguiente →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
