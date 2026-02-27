@@ -6,7 +6,7 @@ import { sendPushToRolesAndSeller } from '@/lib/push'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount, clientName } = body
+    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount } = body
 
     if (!seller || !sellers.includes(seller)) {
       return NextResponse.json({ error: 'Vendedor no válido.' }, { status: 400 })
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       countrySlug: country.slug,
       gameUsername: gameUsername.trim(),
       seller,
-      clientName: clientName ?? null,
+      clientName: seller,
       packageId: pkg.id,
       packageCoins: pkg.coins,
       packagePrice: pkg.price,
@@ -73,11 +73,10 @@ export async function POST(request: NextRequest) {
     })
 
     // ── Push notification (non-blocking) ──
-    const notifyName = clientName ?? seller
     sendPushToRolesAndSeller(seller, {
-      title: `🪙 Nuevo pedido — ${country.flag} ${notifyName}`,
+      title: `🪙 Nuevo pedido — ${country.flag} ${seller}`,
       body: `${formatCoins(pkg.coins)} 🪙 · ${formatPrice(pkg.price, country.currencyCode)} · Ref: ${gameUsername.trim()}`,
-    }, clientName ?? null)
+    })
 
     return NextResponse.json({ orderNumber: order.order_number }, { status: 201 })
   } catch (err) {
