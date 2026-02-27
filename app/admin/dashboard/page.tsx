@@ -14,6 +14,7 @@ import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
 import { LogoutButton } from '@/components/admin/LogoutButton'
 import { PushSetup } from '@/components/admin/PushSetup'
 import { OrderActions } from '@/components/admin/OrderActions'
+import { DashboardCharts } from '@/components/admin/DashboardCharts'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -190,6 +191,15 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <StatCard label="Coins disponibles" value={`${formatCoins(totalAvailable)} 🪙`} />
         <StatCard label="Vendedores activos" value={String(sellerStats.length)} />
       </div>
+
+      {/* Charts — super admin only */}
+      {isSuperAdmin && (
+        <DashboardCharts
+          sellerStats={sellerStats}
+          totalCoinsSold={totalCoinsSold}
+          totalAvailable={totalAvailable}
+        />
+      )}
 
       {/* Coin accounts */}
       <div>
