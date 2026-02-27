@@ -198,6 +198,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       {isSuperAdmin && (
         <DashboardCharts
           sellerStats={sellerStats}
+          registrarStats={registrarStats}
           totalCoinsSold={totalCoinsSold}
           totalAvailable={totalAvailable}
         />

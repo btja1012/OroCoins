@@ -4,18 +4,25 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts'
-import type { SellerStat } from '@/lib/admin-db'
+import type { SellerStat, RegistrarStat } from '@/lib/admin-db'
 import { formatCoins } from '@/lib/data'
 
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f97316']
 
 interface Props {
   sellerStats: SellerStat[]
+  registrarStats: RegistrarStat[]
   totalCoinsSold: number
   totalAvailable: number
 }
 
-export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }: Props) {
+export function DashboardCharts({ sellerStats, registrarStats, totalCoinsSold, totalAvailable }: Props) {
+  const vendedoraData = registrarStats.map((r) => ({
+    name: r.registered_by,
+    coins: Number(r.total_coins),
+    pedidos: Number(r.order_count),
+  }))
+
   const coinData = sellerStats.map((s) => ({
     name: s.seller,
     coins: Number(s.total_coins),
@@ -48,6 +55,41 @@ export function DashboardCharts({ sellerStats, totalCoinsSold, totalAvailable }:
           <span>{formatCoins(totalCoins)} total histórico</span>
         </div>
       </div>
+
+      {/* ── Vendedoras: Maga / Neme ── */}
+      {vendedoraData.length > 0 && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
+            Ventas por vendedor (Maga / Neme)
+          </p>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={vendedoraData} barSize={48}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
+              <YAxis
+                tick={{ fill: '#71717a', fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+              />
+              <Tooltip
+                contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 12, fontSize: 12 }}
+                formatter={(v: number | undefined) => [formatCoins(v ?? 0) + ' 🪙', 'Monedas']}
+              />
+              <Bar dataKey="coins" name="coins" radius={[6, 6, 0, 0]} fill="#f59e0b" />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {vendedoraData.map((d, i) => (
+              <div key={d.name} className="bg-zinc-800/50 rounded-xl p-3">
+                <p className="text-zinc-400 text-xs font-semibold mb-1">{d.name}</p>
+                <p className="text-amber-400 font-black text-lg">{formatCoins(d.coins)} <span className="text-sm">🪙</span></p>
+                <p className="text-zinc-500 text-xs mt-0.5">{d.pedidos} pedidos</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
