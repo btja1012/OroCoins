@@ -5,7 +5,7 @@ import { sql } from '@/lib/db'
 
 export async function POST() {
   const session = await getSession()
-  if (!session || !['admin', 'super_admin'].includes(session.role)) {
+  if (!session) {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
   }
 
