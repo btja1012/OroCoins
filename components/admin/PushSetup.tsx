@@ -48,11 +48,33 @@ export function PushSetup() {
 
   if (status === 'unsupported') return null
 
+  const testPush = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/push/test', { method: 'POST' })
+      const data = await res.json()
+      if (!data.ok) alert('Error: ' + (data.error ?? 'Fallo al enviar'))
+    } catch {
+      alert('Error de conexión')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (status === 'granted') {
     return (
-      <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
-        <Bell size={12} />
-        <span>Notificaciones activas</span>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
+          <Bell size={12} />
+          <span>Activas</span>
+        </div>
+        <button
+          onClick={testPush}
+          disabled={loading}
+          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 px-2 py-1 rounded-lg transition-all disabled:opacity-50"
+        >
+          {loading ? '...' : 'Probar'}
+        </button>
       </div>
     )
   }
