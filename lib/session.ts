@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 export interface SessionUser {
   id: number
   username: string
-  role: 'super_admin' | 'admin' | 'seller' | 'demo'
+  role: 'super_admin' | 'admin' | 'seller'
   sellerName?: string
 }
 

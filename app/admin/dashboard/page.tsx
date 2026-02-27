@@ -25,21 +25,12 @@ const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super Admin',
   admin: 'Admin',
   seller: 'Colector',
-  demo: 'Demo',
 }
 
 const ROLE_COLORS: Record<string, string> = {
   super_admin: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   admin: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   seller: 'bg-zinc-700/50 text-zinc-300 border-zinc-600/30',
-  demo: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-}
-
-// Maps real seller names to anonymous labels for demo mode
-function makeDemoMask(names: string[]): Record<string, string> {
-  const sorted = [...new Set(names)].sort()
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  return Object.fromEntries(sorted.map((name, i) => [name, `Colector ${letters[i]}`]))
 }
 
 export default async function DashboardPage() {
@@ -48,7 +39,6 @@ export default async function DashboardPage() {
 
   const isSuperAdmin = session.role === 'super_admin'
   const isAdmin = session.role === 'admin' || isSuperAdmin
-  const isDemo = session.role === 'demo'
 
   return (
     <main className="min-h-screen bg-black">
@@ -66,7 +56,7 @@ export default async function DashboardPage() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            {!isDemo && <PushSetup />}
+            <PushSetup />
             <span className="text-zinc-500 text-sm hidden sm:block">{session.username}</span>
             <LogoutButton />
           </div>
@@ -81,8 +71,8 @@ export default async function DashboardPage() {
         )}
 
         {/* ─── ADMIN / SUPER ADMIN VIEW ─── */}
-        {(isAdmin || isDemo) && (
-          <AdminView isSuperAdmin={isSuperAdmin} isDemo={isDemo} />
+        {isAdmin && (
+          <AdminView isSuperAdmin={isSuperAdmin} />
         )}
       </div>
     </main>
@@ -181,7 +171,7 @@ async function SellerView({ sellerName }: { sellerName: string }) {
 }
 
 /* ─────────────────── ADMIN VIEW ─────────────────── */
-async function AdminView({ isSuperAdmin, isDemo }: { isSuperAdmin: boolean; isDemo?: boolean }) {
+async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const [globalStats, sellerStats, recentOrders, coinAccounts, registrarStats] = await Promise.all([
     getGlobalStats(),
     getAllSellerStats(),
@@ -192,11 +182,6 @@ async function AdminView({ isSuperAdmin, isDemo }: { isSuperAdmin: boolean; isDe
 
   const totalCoinsSold = Number(globalStats.total_coins_sold)
   const totalAvailable = coinAccounts.reduce((sum, a) => sum + Number(a.current_balance), 0)
-
-  // Demo mode: build a mask mapping real seller names → anonymous labels
-  const allSellerNames = sellerStats.map((s) => s.seller)
-  const demoMask = isDemo ? makeDemoMask(allSellerNames) : null
-  const mask = (name: string) => demoMask ? (demoMask[name] ?? name) : name
 
   return (
     <div className="space-y-8">
@@ -210,8 +195,8 @@ async function AdminView({ isSuperAdmin, isDemo }: { isSuperAdmin: boolean; isDe
         <StatCard label="Colectores activos" value={String(sellerStats.length)} />
       </div>
 
-      {/* Charts — super admin only, hidden in demo */}
-      {isSuperAdmin && !isDemo && (
+      {/* Charts — super admin only */}
+      {isSuperAdmin && (
         <DashboardCharts
           sellerStats={sellerStats}
           registrarStats={registrarStats}
@@ -242,8 +227,8 @@ async function AdminView({ isSuperAdmin, isDemo }: { isSuperAdmin: boolean; isDe
         )}
       </div>
 
-      {/* Sales by registrar — hidden in demo */}
-      {registrarStats.length > 0 && !isDemo && (
+      {/* Sales by registrar (Maga / Neme) */}
+      {registrarStats.length > 0 && (
         <div>
           <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
             Ventas por vendedor
@@ -287,7 +272,7 @@ async function AdminView({ isSuperAdmin, isDemo }: { isSuperAdmin: boolean; isDe
                     const country = countries.find((c) => c.slug === s.country_slug)
                     return (
                       <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
-                        <td className="px-4 py-3 font-bold text-white">{mask(s.seller)}</td>
+                        <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
                         <td className="px-4 py-3 text-zinc-400">
                           {country?.flag} {s.country}
                         </td>
@@ -339,7 +324,7 @@ async function AdminView({ isSuperAdmin, isDemo }: { isSuperAdmin: boolean; isDe
                     return (
                       <tr key={order.id} className="border-b border-zinc-900 hover:bg-amber-500/5">
                         <td className="px-4 py-3 font-mono text-amber-400 text-xs">{order.order_number}</td>
-                        <td className="px-4 py-3 text-zinc-300 font-medium">{mask(order.seller ?? '—')}</td>
+                        <td className="px-4 py-3 text-zinc-300 font-medium">{order.seller ?? '—'}</td>
                         <td className="px-4 py-3 text-zinc-400">{country?.flag} {order.country}</td>
                         <td className="px-4 py-3 text-right text-amber-400 font-bold">
                           {formatCoins(order.package_coins)} 🪙
@@ -349,7 +334,7 @@ async function AdminView({ isSuperAdmin, isDemo }: { isSuperAdmin: boolean; isDe
                           {formatPrice(Number(order.package_price), order.currency_code)}
                         </td>
                         <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{order.game_username}</td>
-                        <td className="px-4 py-3 text-zinc-300 text-xs font-medium">{isDemo ? '—' : (order.registered_by ?? '—')}</td>
+                        <td className="px-4 py-3 text-zinc-300 text-xs font-medium">{order.registered_by ?? '—'}</td>
                         <td className="px-4 py-3 text-right text-zinc-500 text-xs">
                           {new Date(order.created_at).toLocaleDateString('es', {
                             day: '2-digit', month: 'short', year: '2-digit',
