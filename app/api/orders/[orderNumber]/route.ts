@@ -44,7 +44,10 @@ export async function PUT(
     }
 
     await db`
-      UPDATE orders SET status = ${status}, updated_at = NOW()
+      UPDATE orders
+      SET status = ${status}, updated_at = NOW(),
+          approved_by = ${session.sellerName ?? session.username},
+          approved_at = NOW()
       WHERE order_number = ${orderNumber}
     `
     return NextResponse.json({ ok: true })

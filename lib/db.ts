@@ -23,6 +23,8 @@ export interface Order {
   is_custom: boolean
   coin_account: string
   registered_by: string | null
+  approved_by: string | null
+  approved_at: string | null
   status: string
   created_at: string
 }

@@ -10,13 +10,14 @@ import {
   getCoinAccounts,
   getRegistrarStats,
 } from '@/lib/admin-db'
-import { countries, formatPrice, formatCoins } from '@/lib/data'
+import { countries, formatPrice, formatCoins, sellers } from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
 import { LogoutButton } from '@/components/admin/LogoutButton'
 import { PushSetup } from '@/components/admin/PushSetup'
-import { OrderActions } from '@/components/admin/OrderActions'
 import { DashboardCharts } from '@/components/admin/DashboardCharts'
 import { AutoRefresh } from '@/components/admin/AutoRefresh'
+import { OrderActions } from '@/components/admin/OrderActions'
+import { OrdersTable } from '@/components/admin/OrdersTable'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -298,62 +299,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
           Pedidos recientes
         </h3>
-        <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
-          {recentOrders.length === 0 ? (
-            <p className="text-zinc-600 text-center py-12">No hay pedidos.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
-                    <th className="text-left px-4 py-3"># Orden</th>
-                    <th className="text-left px-4 py-3">Colector</th>
-                    <th className="text-left px-4 py-3">País</th>
-                    <th className="text-right px-4 py-3">Monedas</th>
-                    <th className="text-right px-4 py-3">Monto</th>
-                    <th className="text-left px-4 py-3">Comprobante</th>
-                    <th className="text-left px-4 py-3">Vendedor</th>
-                    <th className="text-right px-4 py-3">Fecha</th>
-                    <th className="text-center px-4 py-3">Estado</th>
-                    <th className="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(recentOrders as Order[]).map((order) => {
-                    const country = countries.find((c) => c.slug === order.country_slug)
-                    return (
-                      <tr key={order.id} className="border-b border-zinc-900 hover:bg-amber-500/5">
-                        <td className="px-4 py-3 font-mono text-amber-400 text-xs">{order.order_number}</td>
-                        <td className="px-4 py-3 text-zinc-300 font-medium">{order.seller ?? '—'}</td>
-                        <td className="px-4 py-3 text-zinc-400">{country?.flag} {order.country}</td>
-                        <td className="px-4 py-3 text-right text-amber-400 font-bold">
-                          {formatCoins(order.package_coins)} 🪙
-                          {order.is_custom && <span className="text-zinc-600 text-xs ml-1">(custom)</span>}
-                        </td>
-                        <td className="px-4 py-3 text-right text-white font-semibold">
-                          {formatPrice(Number(order.package_price), order.currency_code)}
-                        </td>
-                        <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{order.game_username}</td>
-                        <td className="px-4 py-3 text-zinc-300 text-xs font-medium">{order.registered_by ?? '—'}</td>
-                        <td className="px-4 py-3 text-right text-zinc-500 text-xs">
-                          {new Date(order.created_at).toLocaleDateString('es', {
-                            day: '2-digit', month: 'short', year: '2-digit',
-                          })}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <StatusBadge status={order.status} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <OrderActions orderNumber={order.order_number} status={order.status} />
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <OrdersTable orders={recentOrders as Order[]} sellers={[...sellers]} />
       </div>
     </div>
   )

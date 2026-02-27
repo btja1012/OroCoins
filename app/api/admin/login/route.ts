@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         await db`
           UPDATE admin_users
           SET failed_attempts = ${attempts},
-              locked_until = NOW() + INTERVAL '${db.unsafe(String(LOCK_MINUTES))} minutes'
+              locked_until = NOW() + INTERVAL '15 minutes'
           WHERE id = ${user.id}
         `
         return NextResponse.json(
