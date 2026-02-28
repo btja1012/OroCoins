@@ -226,7 +226,7 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
                   <p>{new Date(order.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: '2-digit' })}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <OrderActions orderNumber={order.order_number} status={order.status} />
+                  <OrderActions orderNumber={order.order_number} status={order.status} packageCoins={order.package_coins} gameUsername={order.game_username} />
                   {order.status === 'pending' && (
                     <RenotifyButton orderNumber={order.order_number} />
                   )}
@@ -300,7 +300,7 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <OrderActions orderNumber={order.order_number} status={order.status} />
+                          <OrderActions orderNumber={order.order_number} status={order.status} packageCoins={order.package_coins} gameUsername={order.game_username} />
                           {order.status === 'pending' && (
                             <RenotifyButton orderNumber={order.order_number} />
                           )}

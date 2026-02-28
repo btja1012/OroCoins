@@ -26,7 +26,6 @@ export function OrderForm() {
   const [isCustomSelected, setIsCustomSelected] = useState(false)
   const [gameUsername, setGameUsername] = useState('')
   const [coinAccount, setCoinAccount] = useState<'OrosPV1' | 'OrosPV2' | null>(null)
-  const [notes, setNotes] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -114,7 +113,6 @@ export function OrderForm() {
         seller: selectedSeller,
         gameUsername: gameUsername.trim(),
         coinAccount,
-        notes: notes.trim() || undefined,
       }
 
       if (selectedPackage) {
@@ -317,21 +315,6 @@ export function OrderForm() {
             />
           </div>
 
-          {/* Notas opcionales */}
-          <div className="mb-4">
-            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">
-              Notas <span className="text-zinc-700 normal-case font-normal">(opcional)</span>
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observaciones internas sobre este pedido..."
-              maxLength={500}
-              rows={2}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700 focus:outline-none focus:border-zinc-600 resize-none"
-            />
-          </div>
-
           {error && (
             <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm mb-4">
               <AlertCircle size={15} className="mt-0.5 shrink-0" />
@@ -351,7 +334,6 @@ export function OrderForm() {
                 <ConfirmRow label="Monto" value={formatPrice(displayPrice, selectedCountry!.currencyCode)} highlight />
                 <ConfirmRow label="Cuenta" value={coinAccount!} />
                 <ConfirmRow label="Comprobante" value={gameUsername.trim()} mono />
-                {notes.trim() && <ConfirmRow label="Notas" value={notes.trim()} />}
               </div>
               <div className="flex gap-2 pt-1">
                 <button

@@ -3,8 +3,19 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, X, Loader2, AlertCircle } from 'lucide-react'
+import { formatCoins } from '@/lib/data'
 
-export function OrderActions({ orderNumber, status }: { orderNumber: string; status: string }) {
+export function OrderActions({
+  orderNumber,
+  status,
+  packageCoins,
+  gameUsername,
+}: {
+  orderNumber: string
+  status: string
+  packageCoins?: number
+  gameUsername?: string
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState<'completed' | 'cancelled' | null>(null)
   const [confirm, setConfirm] = useState<'completed' | 'cancelled' | null>(null)
@@ -56,6 +67,12 @@ export function OrderActions({ orderNumber, status }: { orderNumber: string; sta
   if (confirm) {
     return (
       <div className="space-y-1.5">
+        {confirm === 'completed' && packageCoins != null && (
+          <p className="text-xs text-amber-400 font-semibold">
+            Enviar <span className="font-black">{formatCoins(packageCoins)} 🪙</span>
+            {gameUsername && <> a <span className="font-mono text-white">{gameUsername}</span></>}
+          </p>
+        )}
         {confirm === 'cancelled' && (
           <input
             type="text"
