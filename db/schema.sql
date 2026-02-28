@@ -83,3 +83,23 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (user_id, endpoint)
 );
+
+CREATE TABLE IF NOT EXISTS collector_payments (
+  id             SERIAL PRIMARY KEY,
+  seller_name    VARCHAR(100)   NOT NULL,
+  amount_usd     DECIMAL(14, 2) NOT NULL,
+  reference      TEXT           NOT NULL,
+  notes          TEXT,
+  status         VARCHAR(20)    NOT NULL DEFAULT 'pending'
+                 CHECK (status IN ('pending', 'confirmed', 'rejected')),
+  reject_reason  TEXT,
+  submitted_by   TEXT           NOT NULL,
+  reviewed_by    TEXT,
+  reviewed_at    TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ    DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_collector_payments_seller
+  ON collector_payments (seller_name, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_collector_payments_status
+  ON collector_payments (status);

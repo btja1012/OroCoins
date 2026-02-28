@@ -28,6 +28,8 @@ import { OrderActions } from '@/components/admin/OrderActions'
 import { OrdersTable } from '@/components/admin/OrdersTable'
 import { TabTitle } from '@/components/admin/TabTitle'
 import { SessionWarning } from '@/components/admin/SessionWarning'
+import { PendingPayments } from '@/components/admin/PendingPayments'
+import { DebtCard } from '@/components/seller/DebtCard'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -101,10 +103,7 @@ async function SellerView({ sellerName }: { sellerName: string }) {
   ])
 
   const country = countries.find((c) => c.slug === stats?.country_slug)
-  const isExempt = commissionExemptSellers.includes(sellerName as Seller)
   const totalAmount = Number(stats?.total_amount ?? 0)
-  const commission = isExempt ? 0 : totalAmount * COLLECTOR_COMMISSION_RATE
-  const netOwed = totalAmount - commission
 
   return (
     <div className="space-y-6">
@@ -131,32 +130,8 @@ async function SellerView({ sellerName }: { sellerName: string }) {
         />
       </div>
 
-      {/* Commission breakdown — only for non-exempt sellers */}
-      {!isExempt && stats && (
-        <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5">
-          <p className="text-amber-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Tu deuda con Oros Pura Vida
-          </p>
-          <div className="space-y-3">
-            <CommissionRow
-              label="Total recolectado"
-              value={formatPrice(totalAmount, stats.currency_code)}
-            />
-            <CommissionRow
-              label={`Tu comisión (${COLLECTOR_COMMISSION_RATE * 100}%)`}
-              value={`− ${formatPrice(commission, stats.currency_code)}`}
-              green
-            />
-            <div className="border-t border-amber-500/20 pt-3">
-              <CommissionRow
-                label="Debes a OrosPV"
-                value={formatPrice(netOwed, stats.currency_code)}
-                bold
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Debt & payment card */}
+      <DebtCard stats={stats} sellerName={sellerName} />
 
       {/* Pending orders callout */}
       {orders.filter((o) => (o as Order).status === 'pending').length > 0 && (
@@ -351,6 +326,9 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">
             Comisiones y pagos
           </h3>
+
+          {/* Pending payment requests from collectors */}
+          <PendingPayments />
 
           {/* Collector debt table */}
           <div>

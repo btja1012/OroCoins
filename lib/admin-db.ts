@@ -212,6 +212,78 @@ export async function getCoinAccountHistory(limit = 20): Promise<CoinAccountHist
   return result as CoinAccountHistoryEntry[]
 }
 
+export interface CollectorPayment {
+  id: number
+  seller_name: string
+  amount_usd: number
+  reference: string
+  notes?: string
+  status: 'pending' | 'confirmed' | 'rejected'
+  reject_reason?: string
+  submitted_by: string
+  reviewed_by?: string
+  reviewed_at?: string
+  created_at: string
+}
+
+export async function getCollectorPayments(sellerName?: string): Promise<CollectorPayment[]> {
+  const db = sql()
+  const result = sellerName
+    ? await db`
+        SELECT * FROM collector_payments
+        WHERE seller_name = ${sellerName}
+        ORDER BY created_at DESC
+      `
+    : await db`
+        SELECT * FROM collector_payments
+        ORDER BY created_at DESC
+      `
+  return result as CollectorPayment[]
+}
+
+export async function getConfirmedPaymentsTotalUSD(sellerName: string): Promise<number> {
+  const db = sql()
+  const result = await db`
+    SELECT COALESCE(SUM(amount_usd), 0)::numeric AS total
+    FROM collector_payments
+    WHERE seller_name = ${sellerName} AND status = 'confirmed'
+  `
+  return Number(result[0]?.total ?? 0)
+}
+
+export async function createCollectorPayment(data: {
+  sellerName: string
+  amountUsd: number
+  reference: string
+  notes?: string
+  submittedBy: string
+}): Promise<CollectorPayment> {
+  const db = sql()
+  const result = await db`
+    INSERT INTO collector_payments (seller_name, amount_usd, reference, notes, submitted_by)
+    VALUES (${data.sellerName}, ${data.amountUsd}, ${data.reference}, ${data.notes ?? null}, ${data.submittedBy})
+    RETURNING *
+  `
+  return result[0] as CollectorPayment
+}
+
+export async function reviewCollectorPayment(
+  id: number,
+  status: 'confirmed' | 'rejected',
+  reviewedBy: string,
+  rejectReason?: string
+): Promise<void> {
+  const db = sql()
+  await db`
+    UPDATE collector_payments
+    SET status = ${status},
+        reviewed_by = ${reviewedBy},
+        reviewed_at = NOW(),
+        reject_reason = ${rejectReason ?? null}
+    WHERE id = ${id}
+  `
+}
+
 export async function createAdminUser(data: {
   username: string
   passwordHash: string
