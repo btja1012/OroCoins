@@ -17,6 +17,7 @@ function initWebPush() {
 export async function sendPushToSeller(sellerName: string, payload: {
   title: string
   body: string
+  url?: string
 }) {
   try {
     const ready = initWebPush()
@@ -63,6 +64,7 @@ export async function sendPushToSeller(sellerName: string, payload: {
 export async function sendPushToAdmins(excludeUsername: string, payload: {
   title: string
   body: string
+  url?: string
 }) {
   try {
     const ready = initWebPush()

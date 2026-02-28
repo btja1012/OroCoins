@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS orders (
   registered_by   TEXT,
   approved_by     TEXT,
   approved_at     TIMESTAMPTZ,
+  cancel_reason   TEXT,
   status          VARCHAR(20)    NOT NULL DEFAULT 'pending',
   created_at      TIMESTAMPTZ    DEFAULT NOW(),
   updated_at      TIMESTAMPTZ    DEFAULT NOW()

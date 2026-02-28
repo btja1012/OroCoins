@@ -27,11 +27,12 @@ export async function POST(request: NextRequest) {
     // ── Duplicate comprobante check ──
     const db = sql()
     const existing = await db`
-      SELECT id FROM orders WHERE game_username = ${gameUsername.trim()} AND seller = ${seller} LIMIT 1
+      SELECT id, seller FROM orders WHERE game_username = ${gameUsername.trim()} LIMIT 1
     `
     if (existing.length > 0) {
+      const prevSeller = existing[0].seller
       return NextResponse.json(
-        { error: `El comprobante "${gameUsername.trim()}" ya fue registrado para ${seller}. Esa venta no es aprobada.` },
+        { error: `El comprobante "${gameUsername.trim()}" ya fue registrado${prevSeller ? ` para ${prevSeller}` : ''}. Esa venta no es válida.` },
         { status: 409 }
       )
     }
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     sendPushToSeller(seller, {
       title: `🪙 Nuevo pedido — ${country.flag} ${seller}`,
       body: `${formatCoins(pkg.coins)} 🪙 · ${formatPrice(pkg.price, country.currencyCode)} · Ref: ${gameUsername.trim()}`,
+      url: '/admin/dashboard',
     })
 
     return NextResponse.json({ orderNumber: order.order_number }, { status: 201 })

@@ -27,7 +27,7 @@ export async function PUT(
 
   try {
     const { orderNumber } = await params
-    const { status } = await request.json()
+    const { status, cancelReason } = await request.json()
 
     if (!['completed', 'cancelled'].includes(status)) {
       return NextResponse.json({ error: 'Estado inválido.' }, { status: 400 })
@@ -48,7 +48,8 @@ export async function PUT(
       UPDATE orders
       SET status = ${status}, updated_at = NOW(),
           approved_by = ${session.sellerName ?? session.username},
-          approved_at = NOW()
+          approved_at = NOW(),
+          cancel_reason = ${status === 'cancelled' && cancelReason ? cancelReason : null}
       WHERE order_number = ${orderNumber}
       RETURNING seller, package_coins, currency_code
     `
@@ -61,6 +62,7 @@ export async function PUT(
       const payload = {
         title: `${status === 'completed' ? '✅' : '❌'} Pedido ${action}`,
         body: `${approver} ${action} ${package_coins} 🪙 (${orderNumber})`,
+        url: '/admin/dashboard',
       }
       if (isAdmin) {
         // Admin approved → notify the colector

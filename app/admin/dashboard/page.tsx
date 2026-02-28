@@ -121,6 +121,32 @@ async function SellerView({ sellerName }: { sellerName: string }) {
         />
       </div>
 
+      {/* Pending orders callout */}
+      {orders.filter((o) => (o as Order).status === 'pending').length > 0 && (
+        <div>
+          <h3 className="text-amber-400 text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block" />
+            Pedidos pendientes ({orders.filter((o) => (o as Order).status === 'pending').length})
+          </h3>
+          <div className="space-y-2 mb-6">
+            {(orders as Order[])
+              .filter((o) => o.status === 'pending')
+              .map((order) => (
+                <div key={order.id} className="bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-amber-400 text-xs">{order.order_number}</p>
+                    <p className="text-white font-bold text-sm">
+                      {formatCoins(order.package_coins)} 🪙 · {formatPrice(Number(order.package_price), order.currency_code)}
+                    </p>
+                    <p className="text-zinc-500 text-xs mt-0.5">Ref: {order.game_username}</p>
+                  </div>
+                  <OrderActions orderNumber={order.order_number} status={order.status} />
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
       {/* Orders table */}
       <div>
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">

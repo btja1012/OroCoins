@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, AlertCircle, ChevronRight } from 'lucide-react'
 import {
@@ -28,6 +28,22 @@ export function OrderForm() {
   const [coinAccount, setCoinAccount] = useState<'OrosPV1' | 'OrosPV2' | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [balances, setBalances] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    fetch('/api/admin/coin-accounts')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const map: Record<string, number> = {}
+          data.forEach((a: { name: string; current_balance: number }) => {
+            map[a.name] = Number(a.current_balance)
+          })
+          setBalances(map)
+        }
+      })
+      .catch(() => null)
+  }, [])
 
   const selectedCountry: Country | null = selectedSeller
     ? (countries.find((c) => c.slug === sellerCountryMap[selectedSeller]) ?? null)
@@ -249,20 +265,32 @@ export function OrderForm() {
               Cuenta de Oros
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {(['OrosPV1', 'OrosPV2'] as const).map((acc) => (
-                <button
-                  key={acc}
-                  type="button"
-                  onClick={() => setCoinAccount(acc)}
-                  className={`py-3 rounded-xl border text-sm font-bold transition-all
-                    ${coinAccount === acc
-                      ? 'bg-amber-500 border-amber-500 text-black'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
-                    }`}
-                >
-                  {acc}
-                </button>
-              ))}
+              {(['OrosPV1', 'OrosPV2'] as const).map((acc) => {
+                const bal = balances[acc]
+                const insufficient = bal !== undefined && bal < displayCoins
+                return (
+                  <button
+                    key={acc}
+                    type="button"
+                    onClick={() => !insufficient && setCoinAccount(acc)}
+                    disabled={insufficient}
+                    className={`py-3 px-3 rounded-xl border text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed
+                      ${coinAccount === acc
+                        ? 'bg-amber-500 border-amber-500 text-black'
+                        : insufficient
+                          ? 'bg-zinc-900 border-red-500/30 text-red-400'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
+                      }`}
+                  >
+                    <p>{acc}</p>
+                    {bal !== undefined && (
+                      <p className={`text-xs font-normal mt-0.5 ${coinAccount === acc ? 'text-black/60' : insufficient ? 'text-red-400/70' : 'text-zinc-500'}`}>
+                        {formatCoins(bal)} 🪙
+                      </p>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Download, Search } from 'lucide-react'
+import { Download, Search, Calendar } from 'lucide-react'
 import { OrderActions } from './OrderActions'
 import { formatPrice, formatCoins, countries } from '@/lib/data'
 import type { Order } from '@/lib/db'
@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: string }) {
 function exportCSV(orders: Order[]) {
   const headers = [
     '# Orden', 'Colector', 'País', 'Monedas', 'Monto', 'Moneda',
-    'Comprobante', 'Registrado por', 'Estado', 'Aprobado por', 'Fecha aprobación', 'Fecha creación',
+    'Comprobante', 'Registrado por', 'Estado', 'Razón cancelación', 'Aprobado por', 'Fecha aprobación', 'Fecha creación',
   ]
   const rows = orders.map((o) => [
     o.order_number,
@@ -41,6 +41,7 @@ function exportCSV(orders: Order[]) {
     o.game_username,
     o.registered_by ?? '',
     STATUS_LABELS[o.status] ?? o.status,
+    o.cancel_reason ?? '',
     o.approved_by ?? '',
     o.approved_at ? new Date(o.approved_at).toLocaleString('es') : '',
     new Date(o.created_at).toLocaleString('es'),
@@ -65,6 +66,9 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sellerFilter, setSellerFilter] = useState('all')
+  const [countryFilter, setCountryFilter] = useState('all')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [page, setPage] = useState(1)
 
   const filtered = useMemo(() => {
@@ -72,6 +76,16 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
     return orders.filter((o) => {
       if (statusFilter !== 'all' && o.status !== statusFilter) return false
       if (sellerFilter !== 'all' && o.seller !== sellerFilter) return false
+      if (countryFilter !== 'all' && o.country_slug !== countryFilter) return false
+      if (dateFrom) {
+        const from = new Date(dateFrom)
+        if (new Date(o.created_at) < from) return false
+      }
+      if (dateTo) {
+        const to = new Date(dateTo)
+        to.setDate(to.getDate() + 1)
+        if (new Date(o.created_at) >= to) return false
+      }
       if (search) {
         const q = search.toLowerCase()
         if (
@@ -81,10 +95,12 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
       }
       return true
     })
-  }, [orders, statusFilter, sellerFilter, search])
+  }, [orders, statusFilter, sellerFilter, countryFilter, dateFrom, dateTo, search])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const hasDateFilter = dateFrom || dateTo
 
   return (
     <div className="space-y-3">
@@ -126,6 +142,44 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
           ))}
         </select>
 
+        {/* Country */}
+        <select
+          value={countryFilter}
+          onChange={(e) => setCountryFilter(e.target.value)}
+          className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+        >
+          <option value="all">Todos los países</option>
+          {countries.map((c) => (
+            <option key={c.slug} value={c.slug}>{c.flag} {c.name}</option>
+          ))}
+        </select>
+
+        {/* Date range */}
+        <div className="flex items-center gap-1.5">
+          <Calendar size={12} className="text-zinc-500 shrink-0" />
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+          />
+          <span className="text-zinc-600 text-xs">—</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+          />
+          {hasDateFilter && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo('') }}
+              className="text-zinc-500 hover:text-white text-xs px-1.5"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
         {/* CSV export */}
         <button
           onClick={() => exportCSV(filtered)}
@@ -136,8 +190,49 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
         </button>
       </div>
 
-      {/* Table */}
-      <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <p className="text-zinc-600 text-center py-12">No hay pedidos que coincidan.</p>
+        ) : (
+          paginated.map((order) => {
+            const country = countries.find((c) => c.slug === order.country_slug)
+            return (
+              <div key={order.id} className="bg-zinc-950 border border-amber-500/10 rounded-xl p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-mono text-amber-400 text-xs">{order.order_number}</p>
+                    <p className="text-white font-bold text-sm mt-0.5">
+                      {country?.flag} {order.seller ?? '—'}
+                    </p>
+                  </div>
+                  <StatusBadge status={order.status} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-amber-400 font-black text-lg">
+                    {formatCoins(order.package_coins)} 🪙
+                  </p>
+                  <p className="text-white font-bold">
+                    {formatPrice(Number(order.package_price), order.currency_code)}
+                  </p>
+                </div>
+                <div className="text-xs text-zinc-500 space-y-0.5">
+                  <p>Ref: <span className="text-zinc-300 font-mono">{order.game_username}</span></p>
+                  {order.registered_by && <p>Vendedor: <span className="text-zinc-300">{order.registered_by}</span></p>}
+                  {order.cancel_reason && (
+                    <p className="text-red-400">Razón: {order.cancel_reason}</p>
+                  )}
+                  <p>{new Date(order.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: '2-digit' })}</p>
+                </div>
+                <OrderActions orderNumber={order.order_number} status={order.status} />
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
         {filtered.length === 0 ? (
           <p className="text-zinc-600 text-center py-12">No hay pedidos que coincidan.</p>
         ) : (
@@ -177,9 +272,16 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
                       <td className="px-4 py-3 text-zinc-300 text-xs font-medium">{order.registered_by ?? '—'}</td>
                       <td className="px-4 py-3 text-xs text-zinc-500">
                         {order.approved_by ? (
-                          <span title={order.approved_at ? new Date(order.approved_at).toLocaleString('es') : ''}>
-                            {order.approved_by}
-                          </span>
+                          <div>
+                            <span title={order.approved_at ? new Date(order.approved_at).toLocaleString('es') : ''}>
+                              {order.approved_by}
+                            </span>
+                            {order.cancel_reason && (
+                              <p className="text-red-400/70 text-xs mt-0.5 truncate max-w-[120px]" title={order.cancel_reason}>
+                                {order.cancel_reason}
+                              </p>
+                            )}
+                          </div>
                         ) : '—'}
                       </td>
                       <td className="px-4 py-3 text-right text-zinc-500 text-xs">

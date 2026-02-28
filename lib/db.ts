@@ -25,6 +25,7 @@ export interface Order {
   registered_by: string | null
   approved_by: string | null
   approved_at: string | null
+  cancel_reason: string | null
   status: string
   created_at: string
 }
