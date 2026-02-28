@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Download, Search, Calendar } from 'lucide-react'
 import { OrderActions } from './OrderActions'
+import { RenotifyButton } from './RenotifyButton'
 import { formatPrice, formatCoins, countries } from '@/lib/data'
 import type { Order } from '@/lib/db'
 
@@ -224,7 +225,12 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
                   )}
                   <p>{new Date(order.created_at).toLocaleDateString('es', { day: '2-digit', month: 'short', year: '2-digit' })}</p>
                 </div>
-                <OrderActions orderNumber={order.order_number} status={order.status} />
+                <div className="flex items-center gap-2">
+                  <OrderActions orderNumber={order.order_number} status={order.status} />
+                  {order.status === 'pending' && (
+                    <RenotifyButton orderNumber={order.order_number} />
+                  )}
+                </div>
               </div>
             )
           })
@@ -293,7 +299,12 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
                         <StatusBadge status={order.status} />
                       </td>
                       <td className="px-4 py-3">
-                        <OrderActions orderNumber={order.order_number} status={order.status} />
+                        <div className="flex items-center gap-2">
+                          <OrderActions orderNumber={order.order_number} status={order.status} />
+                          {order.status === 'pending' && (
+                            <RenotifyButton orderNumber={order.order_number} />
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

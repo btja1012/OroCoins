@@ -26,6 +26,7 @@ export function OrderForm() {
   const [isCustomSelected, setIsCustomSelected] = useState(false)
   const [gameUsername, setGameUsername] = useState('')
   const [coinAccount, setCoinAccount] = useState<'OrosPV1' | 'OrosPV2' | null>(null)
+  const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [balances, setBalances] = useState<Record<string, number>>({})
@@ -108,6 +109,7 @@ export function OrderForm() {
         seller: selectedSeller,
         gameUsername: gameUsername.trim(),
         coinAccount,
+        notes: notes.trim() || undefined,
       }
 
       if (selectedPackage) {
@@ -124,6 +126,7 @@ export function OrderForm() {
       })
 
       const data = await res.json()
+      if (res.status === 401) { setError('Tu sesión expiró. Vuelve a iniciar sesión.'); return }
       if (!res.ok) { setError(data.error ?? 'Error al procesar el pedido.'); return }
 
       router.push(`/pedido/${data.orderNumber}`)
@@ -306,6 +309,21 @@ export function OrderForm() {
               placeholder="Número o referencia del comprobante"
               maxLength={100}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700 focus:outline-none focus:border-zinc-600"
+            />
+          </div>
+
+          {/* Notas opcionales */}
+          <div className="mb-4">
+            <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">
+              Notas <span className="text-zinc-700 normal-case font-normal">(opcional)</span>
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Observaciones internas sobre este pedido..."
+              maxLength={500}
+              rows={2}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 hover:border-zinc-700 focus:outline-none focus:border-zinc-600 resize-none"
             />
           </div>
 

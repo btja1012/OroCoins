@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount } = body
+    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount, notes } = body
 
     if (!seller || !sellers.includes(seller)) {
       return NextResponse.json({ error: 'Vendedor no válido.' }, { status: 400 })
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       currencySymbol: country.currencySymbol,
       isCustom,
       coinAccount,
+      notes: notes?.trim() || null,
     })
 
     // ── Push notification (non-blocking) ──

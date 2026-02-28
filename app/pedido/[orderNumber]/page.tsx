@@ -89,12 +89,27 @@ export default async function OrderConfirmationPage({ params }: Props) {
             <Row
               label="Estado"
               value={
-                <span className="inline-flex items-center gap-1.5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full px-2.5 py-0.5 text-xs font-semibold">
-                  <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse" />
-                  Pendiente de pago
-                </span>
+                order.status === 'completed' ? (
+                  <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                    Completado
+                  </span>
+                ) : order.status === 'cancelled' ? (
+                  <span className="inline-flex items-center gap-1.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                    <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                    Cancelado
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                    <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse" />
+                    Pendiente de pago
+                  </span>
+                )
               }
             />
+            {order.status === 'cancelled' && order.cancel_reason && (
+              <Row label="Razón" value={<span className="text-red-400">{order.cancel_reason}</span>} />
+            )}
           </div>
         </div>
 

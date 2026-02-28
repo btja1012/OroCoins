@@ -26,6 +26,7 @@ export interface Order {
   approved_by: string | null
   approved_at: string | null
   cancel_reason: string | null
+  notes: string | null
   status: string
   created_at: string
 }
@@ -43,6 +44,7 @@ export async function createOrder(data: {
   isCustom?: boolean
   coinAccount: 'OrosPV1' | 'OrosPV2'
   registeredBy?: string | null
+  notes?: string | null
 }): Promise<Order> {
   const db = neon(getDatabaseUrl())
   const ts = Date.now().toString(36).toUpperCase()
@@ -53,12 +55,12 @@ export async function createOrder(data: {
     db`
       INSERT INTO orders (
         order_number, country, country_slug, game_username,
-        seller, package_id, package_coins, package_price, currency_code, currency_symbol, is_custom, coin_account, registered_by
+        seller, package_id, package_coins, package_price, currency_code, currency_symbol, is_custom, coin_account, registered_by, notes
       ) VALUES (
         ${orderNumber}, ${data.country}, ${data.countrySlug}, ${data.gameUsername},
         ${data.seller}, ${data.packageId}, ${data.packageCoins},
         ${data.packagePrice}, ${data.currencyCode}, ${data.currencySymbol},
-        ${data.isCustom ?? false}, ${data.coinAccount}, ${data.registeredBy ?? null}
+        ${data.isCustom ?? false}, ${data.coinAccount}, ${data.registeredBy ?? null}, ${data.notes ?? null}
       )
       RETURNING *
     `,

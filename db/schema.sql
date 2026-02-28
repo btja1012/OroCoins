@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS admin_users (
 
 -- Run this if the table already exists:
 -- ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS last_logout_at TIMESTAMPTZ;
+-- ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancel_reason TEXT;
+-- ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT;
 
 CREATE TABLE IF NOT EXISTS login_rate_limits (
   id            SERIAL PRIMARY KEY,
@@ -43,6 +45,7 @@ CREATE TABLE IF NOT EXISTS orders (
   approved_by     TEXT,
   approved_at     TIMESTAMPTZ,
   cancel_reason   TEXT,
+  notes           TEXT,
   status          VARCHAR(20)    NOT NULL DEFAULT 'pending',
   created_at      TIMESTAMPTZ    DEFAULT NOW(),
   updated_at      TIMESTAMPTZ    DEFAULT NOW()
