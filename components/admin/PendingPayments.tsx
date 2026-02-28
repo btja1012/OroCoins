@@ -89,9 +89,6 @@ function PaymentRow({ payment, onReviewed }: { payment: CollectorPayment; onRevi
             <span className="text-white font-bold text-sm">{payment.seller_name}</span>
             <span className="text-amber-400 font-black text-sm">${Number(payment.amount_usd).toFixed(2)} USD</span>
           </div>
-          <p className="text-zinc-500 text-xs truncate">
-            Ref: <span className="text-zinc-400 font-mono">{payment.reference}</span>
-          </p>
           {payment.notes && (
             <p className="text-zinc-600 text-xs mt-0.5">{payment.notes}</p>
           )}

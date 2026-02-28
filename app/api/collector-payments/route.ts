@@ -7,6 +7,9 @@ import {
 } from '@/lib/admin-db'
 import { sendPushToSuperAdmins } from '@/lib/push'
 
+const MAX_AMOUNT_USD = 50_000
+const MAX_NOTES_LENGTH = 300
+
 // GET — colector obtiene sus propios pagos + total confirmado
 export async function GET() {
   const session = await getSession()
@@ -40,27 +43,29 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { amount_usd, reference, notes } = body
+  const { amount_usd, notes } = body
 
   const amount = parseFloat(amount_usd)
-  if (!amount || amount <= 0) {
+  if (!isFinite(amount) || amount <= 0) {
     return NextResponse.json({ error: 'El monto debe ser mayor a 0.' }, { status: 400 })
   }
-  if (!reference?.trim()) {
-    return NextResponse.json({ error: 'La referencia de Binance es requerida.' }, { status: 400 })
+  if (amount > MAX_AMOUNT_USD) {
+    return NextResponse.json({ error: `El monto no puede superar $${MAX_AMOUNT_USD.toLocaleString()} USD.` }, { status: 400 })
+  }
+  if (notes && typeof notes === 'string' && notes.length > MAX_NOTES_LENGTH) {
+    return NextResponse.json({ error: `Las notas no pueden superar ${MAX_NOTES_LENGTH} caracteres.` }, { status: 400 })
   }
 
   const payment = await createCollectorPayment({
     sellerName,
     amountUsd: amount,
-    reference: reference.trim(),
     notes: notes?.trim() || undefined,
     submittedBy: session.username,
   })
 
   sendPushToSuperAdmins(session.username, {
     title: `💳 Pago reportado — ${sellerName}`,
-    body: `$${amount.toFixed(2)} USD · Ref: ${reference.trim()}`,
+    body: `$${amount.toFixed(2)} USD`,
     url: '/admin/dashboard',
   })
 

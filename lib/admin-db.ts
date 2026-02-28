@@ -251,17 +251,22 @@ export async function getConfirmedPaymentsTotalUSD(sellerName: string): Promise<
   return Number(result[0]?.total ?? 0)
 }
 
+export async function getCollectorPaymentById(id: number): Promise<CollectorPayment | null> {
+  const db = sql()
+  const result = await db`SELECT * FROM collector_payments WHERE id = ${id} LIMIT 1`
+  return (result[0] as CollectorPayment) ?? null
+}
+
 export async function createCollectorPayment(data: {
   sellerName: string
   amountUsd: number
-  reference: string
   notes?: string
   submittedBy: string
 }): Promise<CollectorPayment> {
   const db = sql()
   const result = await db`
     INSERT INTO collector_payments (seller_name, amount_usd, reference, notes, submitted_by)
-    VALUES (${data.sellerName}, ${data.amountUsd}, ${data.reference}, ${data.notes ?? null}, ${data.submittedBy})
+    VALUES (${data.sellerName}, ${data.amountUsd}, '', ${data.notes ?? null}, ${data.submittedBy})
     RETURNING *
   `
   return result[0] as CollectorPayment

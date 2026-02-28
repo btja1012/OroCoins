@@ -18,7 +18,6 @@ export function DebtCard({ stats, sellerName }: DebtCardProps) {
   const [showForm, setShowForm] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [amountUsd, setAmountUsd] = useState('')
-  const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -54,20 +53,18 @@ export function DebtCard({ stats, sellerName }: DebtCardProps) {
     setError('')
     const amount = parseFloat(amountUsd)
     if (!amount || amount <= 0) { setError('El monto debe ser mayor a 0.'); return }
-    if (!reference.trim()) { setError('La referencia de Binance es requerida.'); return }
 
     setLoading(true)
     try {
       const res = await fetch('/api/collector-payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount_usd: amount, reference: reference.trim(), notes: notes.trim() || undefined }),
+        body: JSON.stringify({ amount_usd: amount, notes: notes.trim() || undefined }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Error al reportar el pago.'); return }
       setSuccess(true)
       setAmountUsd('')
-      setReference('')
       setNotes('')
       setShowForm(false)
       setTimeout(() => setSuccess(false), 4000)
@@ -186,20 +183,6 @@ export function DebtCard({ stats, sellerName }: DebtCardProps) {
 
             <div>
               <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-1.5">
-                Referencia Binance (TX ID)
-              </label>
-              <input
-                type="text"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                placeholder="ID de transacción o referencia"
-                maxLength={200}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-1.5">
                 Notas (opcional)
               </label>
               <input
@@ -248,7 +231,7 @@ export function DebtCard({ stats, sellerName }: DebtCardProps) {
                 <div key={p.id} className="flex items-start justify-between gap-3 py-2 border-b border-zinc-800/50 last:border-0">
                   <div className="min-w-0">
                     <p className="text-white text-sm font-semibold">${Number(p.amount_usd).toFixed(2)} USD</p>
-                    <p className="text-zinc-500 text-xs truncate">{p.reference}</p>
+                    {p.notes && <p className="text-zinc-500 text-xs truncate">{p.notes}</p>}
                     {p.reject_reason && (
                       <p className="text-red-400 text-xs mt-0.5">Razón: {p.reject_reason}</p>
                     )}

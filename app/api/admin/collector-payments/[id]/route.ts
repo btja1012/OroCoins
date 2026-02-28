@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
-import { reviewCollectorPayment, getCollectorPayments } from '@/lib/admin-db'
+import { reviewCollectorPayment, getCollectorPaymentById } from '@/lib/admin-db'
 import { sendPushToSeller } from '@/lib/push'
+
+const MAX_REASON_LENGTH = 300
 
 // PATCH — super admin confirma o rechaza un pago
 export async function PATCH(
@@ -26,9 +28,12 @@ export async function PATCH(
     return NextResponse.json({ error: 'Estado inválido.' }, { status: 400 })
   }
 
-  // Obtener el pago para saber el seller y monto antes de actualizarlo
-  const allPayments = await getCollectorPayments()
-  const payment = allPayments.find((p) => p.id === paymentId)
+  const rawReason = typeof reject_reason === 'string' ? reject_reason.trim() : ''
+  if (rawReason.length > MAX_REASON_LENGTH) {
+    return NextResponse.json({ error: `La razón no puede superar ${MAX_REASON_LENGTH} caracteres.` }, { status: 400 })
+  }
+
+  const payment = await getCollectorPaymentById(paymentId)
   if (!payment) {
     return NextResponse.json({ error: 'Pago no encontrado.' }, { status: 404 })
   }
@@ -36,19 +41,19 @@ export async function PATCH(
     return NextResponse.json({ error: 'Este pago ya fue revisado.' }, { status: 409 })
   }
 
-  await reviewCollectorPayment(paymentId, status, session.username, reject_reason?.trim() || undefined)
+  await reviewCollectorPayment(paymentId, status, session.username, rawReason || undefined)
 
   if (status === 'confirmed') {
     sendPushToSeller(payment.seller_name, {
       title: `✅ Pago confirmado — $${Number(payment.amount_usd).toFixed(2)} USD`,
-      body: `Tu pago fue confirmado por ${session.username}. Ref: ${payment.reference}`,
+      body: `Tu pago fue confirmado por ${session.username}.`,
       url: '/admin/dashboard',
     })
   } else {
     sendPushToSeller(payment.seller_name, {
       title: `❌ Pago rechazado`,
-      body: reject_reason?.trim()
-        ? `Razón: ${reject_reason.trim()}`
+      body: rawReason
+        ? `Razón: ${rawReason}`
         : `Tu pago de $${Number(payment.amount_usd).toFixed(2)} USD fue rechazado. Contacta al admin.`,
       url: '/admin/dashboard',
     })
