@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Download, Search, Calendar } from 'lucide-react'
 import { OrderActions } from './OrderActions'
 import { RenotifyButton } from './RenotifyButton'
@@ -72,8 +72,9 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
   const [dateTo, setDateTo] = useState('')
   const [page, setPage] = useState(1)
 
+  useEffect(() => { setPage(1) }, [orders, statusFilter, sellerFilter, countryFilter, dateFrom, dateTo, search])
+
   const filtered = useMemo(() => {
-    setPage(1)
     return orders.filter((o) => {
       if (statusFilter !== 'all' && o.status !== statusFilter) return false
       if (sellerFilter !== 'all' && o.seller !== sellerFilter) return false
