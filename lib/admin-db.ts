@@ -114,6 +114,27 @@ export async function getGlobalStats(): Promise<GlobalStats> {
   return result[0] as GlobalStats
 }
 
+export interface DailyStats {
+  orders_today: number
+  pending_today: number
+  completed_today: number
+  coins_today: number
+}
+
+export async function getDailyStats(): Promise<DailyStats> {
+  const db = sql()
+  const result = await db`
+    SELECT
+      COUNT(*)::int                                                            AS orders_today,
+      COUNT(*) FILTER (WHERE status = 'pending')::int                         AS pending_today,
+      COUNT(*) FILTER (WHERE status = 'completed')::int                       AS completed_today,
+      COALESCE(SUM(package_coins) FILTER (WHERE status = 'completed'), 0)::bigint AS coins_today
+    FROM orders
+    WHERE created_at >= CURRENT_DATE
+  `
+  return result[0] as DailyStats
+}
+
 export async function getPendingOrderCount(): Promise<number> {
   const db = sql()
   const result = await db`SELECT COUNT(*)::int AS count FROM orders WHERE status = 'pending'`
@@ -149,6 +170,22 @@ export interface CoinAccountHistoryEntry {
   new_balance: number
   changed_by: string
   changed_at: string
+}
+
+export async function addCoinAccountBalance(name: string, addCoins: number, changedBy: string): Promise<void> {
+  const db = sql()
+  const current = await db`SELECT current_balance FROM coin_accounts WHERE name = ${name} LIMIT 1`
+  const prev = Number(current[0]?.current_balance ?? 0)
+  const newBalance = prev + addCoins
+  await db`
+    UPDATE coin_accounts
+    SET current_balance = ${newBalance}, updated_at = NOW()
+    WHERE name = ${name}
+  `
+  await db`
+    INSERT INTO coin_account_history (account_name, prev_balance, new_balance, changed_by)
+    VALUES (${name}, ${prev}, ${newBalance}, ${changedBy})
+  `
 }
 
 export async function updateCoinAccountBalance(name: string, balance: number, changedBy: string): Promise<void> {

@@ -1,17 +1,26 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export function AutoRefresh({ intervalMs = 30000 }: { intervalMs?: number }) {
   const router = useRouter()
   const lastDataRef = useRef<{ pendingCount: number; lastOrderId: number } | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now())
+  const [elapsed, setElapsed] = useState(0)
+
+  // Update elapsed every 15 seconds
+  useEffect(() => {
+    const tick = setInterval(() => {
+      setElapsed(Math.round((Date.now() - lastUpdated) / 1000))
+    }, 15000)
+    return () => clearInterval(tick)
+  }, [lastUpdated])
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>
 
     const poll = async () => {
-      // Pause polling when tab is in background
       if (document.hidden) {
         timeoutId = setTimeout(poll, intervalMs)
         return
@@ -30,6 +39,8 @@ export function AutoRefresh({ intervalMs = 30000 }: { intervalMs?: number }) {
           lastDataRef.current = data
           router.refresh()
         }
+        setLastUpdated(Date.now())
+        setElapsed(0)
       } catch {
         // Silently ignore — don't break the UI on network errors
       } finally {
@@ -41,5 +52,13 @@ export function AutoRefresh({ intervalMs = 30000 }: { intervalMs?: number }) {
     return () => clearTimeout(timeoutId)
   }, [router, intervalMs])
 
-  return null
+  const label = elapsed < 60
+    ? `hace ${elapsed} seg`
+    : `hace ${Math.floor(elapsed / 60)} min`
+
+  return (
+    <p className="text-zinc-700 text-xs text-right mb-2">
+      Actualizado {label}
+    </p>
+  )
 }

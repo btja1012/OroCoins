@@ -27,6 +27,7 @@ export function OrderForm() {
   const [gameUsername, setGameUsername] = useState('')
   const [coinAccount, setCoinAccount] = useState<'OrosPV1' | 'OrosPV2' | null>(null)
   const [notes, setNotes] = useState('')
+  const [confirming, setConfirming] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [balances, setBalances] = useState<Record<string, number>>({})
@@ -91,10 +92,9 @@ export function OrderForm() {
     ? selectedPackage.price
     : parseFloat(customAmount.replace(',', '.'))
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleConfirm = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-
     if (!selectedSeller) { setError('Selecciona un vendedor.'); return }
     if (!hasSelection) { setError('Selecciona un paquete o ingresa un monto.'); return }
     if (!coinAccount) { setError('Selecciona la cuenta de Oros (OrosPV1 o OrosPV2).'); return }
@@ -102,7 +102,12 @@ export function OrderForm() {
       setError('La referencia de comprobante debe tener al menos 2 caracteres.')
       return
     }
+    setConfirming(true)
+  }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
     setLoading(true)
     try {
       const body: Record<string, unknown> = {
@@ -138,7 +143,7 @@ export function OrderForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={confirming ? handleSubmit : handleConfirm} className="space-y-6">
 
       {/* ── PASO 1: Colector ── */}
       <Section step={1} title="Colector">
@@ -334,23 +339,67 @@ export function OrderForm() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-500
-                       text-black font-black py-3.5 rounded-xl transition-colors
-                       flex items-center justify-center gap-2 text-base"
-          >
-            {loading ? (
-              <><Loader2 size={18} className="animate-spin" /> Registrando...</>
-            ) : (
-              'Registrar Pedido'
-            )}
-          </button>
+          {/* ── Confirmation panel ── */}
+          {confirming ? (
+            <div className="bg-amber-500/5 border border-amber-500/30 rounded-xl p-4 space-y-3">
+              <p className="text-amber-400 text-xs font-semibold uppercase tracking-widest">
+                Confirmar pedido
+              </p>
+              <div className="space-y-1.5 text-sm">
+                <ConfirmRow label="Colector" value={`${selectedCountry?.flag} ${selectedSeller}`} />
+                <ConfirmRow label="Monedas" value={`${formatCoins(displayCoins)} 🪙`} highlight />
+                <ConfirmRow label="Monto" value={formatPrice(displayPrice, selectedCountry!.currencyCode)} highlight />
+                <ConfirmRow label="Cuenta" value={coinAccount!} />
+                <ConfirmRow label="Comprobante" value={gameUsername.trim()} mono />
+                {notes.trim() && <ConfirmRow label="Notas" value={notes.trim()} />}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  className="flex-1 py-3 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white text-sm font-semibold transition-colors"
+                >
+                  ← Editar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-500
+                             text-black font-black py-3 rounded-xl transition-colors
+                             flex items-center justify-center gap-2 text-sm"
+                >
+                  {loading ? (
+                    <><Loader2 size={16} className="animate-spin" /> Registrando...</>
+                  ) : (
+                    '✓ Confirmar y Registrar'
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="submit"
+              className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-3.5 rounded-xl transition-colors text-base"
+            >
+              Registrar Pedido →
+            </button>
+          )}
         </Section>
       )}
 
     </form>
+  )
+}
+
+/* ── Fila de confirmación ── */
+function ConfirmRow({ label, value, highlight, mono }: { label: string; value: string; highlight?: boolean; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-1 border-b border-zinc-800/50 last:border-0">
+      <span className="text-zinc-500">{label}</span>
+      <span className={`text-right ${highlight ? 'text-amber-400 font-bold' : mono ? 'text-zinc-300 font-mono text-xs' : 'text-zinc-200'}`}>
+        {value}
+      </span>
+    </div>
   )
 }
 

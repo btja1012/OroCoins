@@ -11,6 +11,7 @@ import {
   getRegistrarStats,
   getCoinAccountHistory,
   getPendingOrderCount,
+  getDailyStats,
 } from '@/lib/admin-db'
 import { countries, formatPrice, formatCoins, sellers } from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
@@ -21,6 +22,7 @@ import { AutoRefresh } from '@/components/admin/AutoRefresh'
 import { OrderActions } from '@/components/admin/OrderActions'
 import { OrdersTable } from '@/components/admin/OrdersTable'
 import { TabTitle } from '@/components/admin/TabTitle'
+import { SessionWarning } from '@/components/admin/SessionWarning'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -49,6 +51,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-black">
       <AutoRefresh intervalMs={30000} />
       <TabTitle pendingCount={pendingCount} />
+      <SessionWarning />
       {/* Header */}
       <header className="sticky top-0 z-10 bg-black/95 backdrop-blur border-b border-amber-500/20">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
@@ -204,8 +207,9 @@ async function SellerView({ sellerName }: { sellerName: string }) {
 
 /* ─────────────────── ADMIN VIEW ─────────────────── */
 async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
-  const [globalStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory] = await Promise.all([
+  const [globalStats, dailyStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory] = await Promise.all([
     getGlobalStats(),
+    getDailyStats(),
     getAllSellerStats(),
     getRecentOrders(200),
     getCoinAccounts(),
@@ -228,6 +232,17 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <StatCard label="Colectores activos" value={String(sellerStats.length)} />
       </div>
 
+      {/* Today's stats */}
+      <div>
+        <h3 className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-3">Hoy</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Pedidos hoy" value={String(dailyStats.orders_today)} />
+          <StatCard label="Pendientes hoy" value={String(dailyStats.pending_today)} accent={dailyStats.pending_today > 0} />
+          <StatCard label="Completados hoy" value={String(dailyStats.completed_today)} />
+          <StatCard label="Monedas hoy" value={`${formatCoins(Number(dailyStats.coins_today))} 🪙`} />
+        </div>
+      </div>
+
       {/* Charts — super admin only */}
       {isSuperAdmin && (
         <DashboardCharts
@@ -241,23 +256,12 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       {/* Coin accounts */}
       <div>
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
-          Cuentas de Oros {isSuperAdmin && <span className="text-amber-500/70 normal-case text-xs ml-1">(editable)</span>}
+          Cuentas de Oros{' '}
+          <span className="text-zinc-600 normal-case text-xs ml-1">
+            ({isSuperAdmin ? '✏ editar saldo · + recargar' : '+ recargar'})
+          </span>
         </h3>
-        {isSuperAdmin ? (
-          <CoinBalanceForm accounts={coinAccounts} />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {coinAccounts.map((account) => (
-              <div key={account.name} className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
-                <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">{account.name}</p>
-                <p className="text-3xl font-black text-amber-400">
-                  {formatCoins(Number(account.current_balance))}<span className="text-lg ml-1">🪙</span>
-                </p>
-                <p className="text-zinc-600 text-xs mt-1">disponibles</p>
-              </div>
-            ))}
-          </div>
-        )}
+        <CoinBalanceForm accounts={coinAccounts} isSuperAdmin={isSuperAdmin} />
       </div>
 
       {/* Coin account history — super admin only */}
