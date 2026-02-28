@@ -114,6 +114,12 @@ export async function getGlobalStats(): Promise<GlobalStats> {
   return result[0] as GlobalStats
 }
 
+export async function getPendingOrderCount(): Promise<number> {
+  const db = sql()
+  const result = await db`SELECT COUNT(*)::int AS count FROM orders WHERE status = 'pending'`
+  return (result[0] as { count: number })?.count ?? 0
+}
+
 export async function getRecentOrders(limit = 100) {
   const db = sql()
   const result = await db`

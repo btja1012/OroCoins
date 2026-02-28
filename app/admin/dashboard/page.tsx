@@ -10,6 +10,7 @@ import {
   getCoinAccounts,
   getRegistrarStats,
   getCoinAccountHistory,
+  getPendingOrderCount,
 } from '@/lib/admin-db'
 import { countries, formatPrice, formatCoins, sellers } from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
@@ -19,6 +20,7 @@ import { DashboardCharts } from '@/components/admin/DashboardCharts'
 import { AutoRefresh } from '@/components/admin/AutoRefresh'
 import { OrderActions } from '@/components/admin/OrderActions'
 import { OrdersTable } from '@/components/admin/OrdersTable'
+import { TabTitle } from '@/components/admin/TabTitle'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -41,10 +43,12 @@ export default async function DashboardPage() {
 
   const isSuperAdmin = session.role === 'super_admin'
   const isAdmin = session.role === 'admin' || isSuperAdmin
+  const pendingCount = await getPendingOrderCount()
 
   return (
     <main className="min-h-screen bg-black">
       <AutoRefresh intervalMs={30000} />
+      <TabTitle pendingCount={pendingCount} />
       {/* Header */}
       <header className="sticky top-0 z-10 bg-black/95 backdrop-blur border-b border-amber-500/20">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">

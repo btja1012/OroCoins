@@ -7,11 +7,13 @@ import { Check, X, Loader2 } from 'lucide-react'
 export function OrderActions({ orderNumber, status }: { orderNumber: string; status: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState<'completed' | 'cancelled' | null>(null)
+  const [confirm, setConfirm] = useState<'completed' | 'cancelled' | null>(null)
 
   if (status !== 'pending') return null
 
   const update = async (newStatus: 'completed' | 'cancelled') => {
     setLoading(newStatus)
+    setConfirm(null)
     try {
       await fetch(`/api/orders/${orderNumber}`, {
         method: 'PUT',
@@ -24,10 +26,38 @@ export function OrderActions({ orderNumber, status }: { orderNumber: string; sta
     }
   }
 
+  if (confirm) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="text-zinc-400 text-xs hidden sm:block">¿Confirmar?</span>
+        <button
+          onClick={() => update(confirm)}
+          disabled={loading !== null}
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
+            confirm === 'completed'
+              ? 'bg-blue-500 hover:bg-blue-400 text-white'
+              : 'bg-red-500 hover:bg-red-400 text-white'
+          }`}
+        >
+          {loading !== null ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+          Sí
+        </button>
+        <button
+          onClick={() => setConfirm(null)}
+          disabled={loading !== null}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors disabled:opacity-50"
+        >
+          <X size={12} />
+          No
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-center gap-2">
       <button
-        onClick={() => update('completed')}
+        onClick={() => setConfirm('completed')}
         disabled={loading !== null}
         title="Aprobar"
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 transition-colors disabled:opacity-50 text-xs font-semibold"
@@ -36,7 +66,7 @@ export function OrderActions({ orderNumber, status }: { orderNumber: string; sta
         <span className="hidden sm:inline">Aprobar</span>
       </button>
       <button
-        onClick={() => update('cancelled')}
+        onClick={() => setConfirm('cancelled')}
         disabled={loading !== null}
         title="Rechazar"
         className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/30 transition-colors disabled:opacity-50 text-xs font-semibold"

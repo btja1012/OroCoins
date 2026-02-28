@@ -10,7 +10,19 @@ CREATE TABLE IF NOT EXISTS admin_users (
   is_active        BOOLEAN      NOT NULL DEFAULT true,
   failed_attempts  INTEGER      NOT NULL DEFAULT 0,
   locked_until     TIMESTAMPTZ,
+  last_logout_at   TIMESTAMPTZ,
   created_at       TIMESTAMPTZ  DEFAULT NOW()
+);
+
+-- Run this if the table already exists:
+-- ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS last_logout_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS login_rate_limits (
+  id            SERIAL PRIMARY KEY,
+  ip            VARCHAR(45)  UNIQUE NOT NULL,
+  attempts      INTEGER      NOT NULL DEFAULT 0,
+  blocked_until TIMESTAMPTZ,
+  last_attempt  TIMESTAMPTZ  DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS orders (

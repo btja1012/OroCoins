@@ -9,7 +9,7 @@ export interface SessionUser {
 }
 
 export const SESSION_COOKIE = 'opv_session'
-export const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+export const SESSION_MAX_AGE = 60 * 60 * 8 // 8 hours
 
 function getSecret() {
   const s = process.env.JWT_SECRET
@@ -21,7 +21,7 @@ export async function signToken(user: SessionUser): Promise<string> {
   return new SignJWT(user as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime('8h')
     .sign(getSecret())
 }
 
