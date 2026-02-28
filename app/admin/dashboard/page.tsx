@@ -13,7 +13,12 @@ import {
   getPendingOrderCount,
   getDailyStats,
 } from '@/lib/admin-db'
-import { countries, formatPrice, formatCoins, sellers } from '@/lib/data'
+import {
+  countries, formatPrice, formatCoins, sellers,
+  commissionExemptSellers, COLLECTOR_COMMISSION_RATE,
+  REGISTRAR_MILESTONE_COINS, REGISTRAR_BONUS_USD,
+  type Seller,
+} from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
 import { LogoutButton } from '@/components/admin/LogoutButton'
 import { PushSetup } from '@/components/admin/PushSetup'
@@ -96,6 +101,10 @@ async function SellerView({ sellerName }: { sellerName: string }) {
   ])
 
   const country = countries.find((c) => c.slug === stats?.country_slug)
+  const isExempt = commissionExemptSellers.includes(sellerName as Seller)
+  const totalAmount = Number(stats?.total_amount ?? 0)
+  const commission = isExempt ? 0 : totalAmount * COLLECTOR_COMMISSION_RATE
+  const netOwed = totalAmount - commission
 
   return (
     <div className="space-y-6">
@@ -109,12 +118,6 @@ async function SellerView({ sellerName }: { sellerName: string }) {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
-          label="Total recaudado"
-          value={stats ? formatPrice(Number(stats.total_amount), stats.currency_code) : '—'}
-          sub="lo que debes a OrosPV"
-          accent
-        />
-        <StatCard
           label="Monedas vendidas"
           value={stats ? `${formatCoins(stats.total_coins)} 🪙` : '—'}
         />
@@ -122,7 +125,38 @@ async function SellerView({ sellerName }: { sellerName: string }) {
           label="Pedidos registrados"
           value={String(stats?.order_count ?? 0)}
         />
+        <StatCard
+          label="Total recaudado"
+          value={stats ? formatPrice(totalAmount, stats.currency_code) : '—'}
+        />
       </div>
+
+      {/* Commission breakdown — only for non-exempt sellers */}
+      {!isExempt && stats && (
+        <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5">
+          <p className="text-amber-400 text-xs font-semibold uppercase tracking-widest mb-4">
+            Tu deuda con Oros Pura Vida
+          </p>
+          <div className="space-y-3">
+            <CommissionRow
+              label="Total recolectado"
+              value={formatPrice(totalAmount, stats.currency_code)}
+            />
+            <CommissionRow
+              label={`Tu comisión (${COLLECTOR_COMMISSION_RATE * 100}%)`}
+              value={`− ${formatPrice(commission, stats.currency_code)}`}
+              green
+            />
+            <div className="border-t border-amber-500/20 pt-3">
+              <CommissionRow
+                label="Debes a OrosPV"
+                value={formatPrice(netOwed, stats.currency_code)}
+                bold
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pending orders callout */}
       {orders.filter((o) => (o as Order).status === 'pending').length > 0 && (
@@ -311,8 +345,107 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         </div>
       )}
 
+      {/* ─── Commissions & Payments — super_admin only ─── */}
+      {isSuperAdmin && (
+        <div className="space-y-6">
+          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">
+            Comisiones y pagos
+          </h3>
+
+          {/* Collector debt table */}
+          <div>
+            <p className="text-zinc-500 text-xs mb-3">Deuda de colectores a OrosPV (−{COLLECTOR_COMMISSION_RATE * 100}% comisión)</p>
+            <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
+                      <th className="text-left px-4 py-3">Colector</th>
+                      <th className="text-left px-4 py-3">País</th>
+                      <th className="text-right px-4 py-3">Total recolectado</th>
+                      <th className="text-right px-4 py-3">Comisión 3%</th>
+                      <th className="text-right px-4 py-3">Debe a OrosPV</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sellerStats
+                      .filter((s) => !commissionExemptSellers.includes(s.seller as Seller))
+                      .map((s) => {
+                        const total = Number(s.total_amount)
+                        const comm = total * COLLECTOR_COMMISSION_RATE
+                        const owed = total - comm
+                        const c = countries.find((cc) => cc.slug === s.country_slug)
+                        return (
+                          <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
+                            <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
+                            <td className="px-4 py-3 text-zinc-400">{c?.flag} {s.country}</td>
+                            <td className="px-4 py-3 text-right text-zinc-400">
+                              {formatPrice(total, s.currency_code)}
+                            </td>
+                            <td className="px-4 py-3 text-right text-emerald-400 font-medium">
+                              − {formatPrice(comm, s.currency_code)}
+                            </td>
+                            <td className="px-4 py-3 text-right text-amber-400 font-black text-base">
+                              {formatPrice(owed, s.currency_code)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Registrar bonuses (Neme / Maga) */}
+          {registrarStats.length > 0 && (
+            <div>
+              <p className="text-zinc-500 text-xs mb-3">
+                Bonos de registradores — ${REGISTRAR_BONUS_USD} USD por cada {formatCoins(REGISTRAR_MILESTONE_COINS)} 🪙 vendidas
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {registrarStats.map((r) => {
+                  const coins = Number(r.total_coins)
+                  const milestones = Math.floor(coins / REGISTRAR_MILESTONE_COINS)
+                  const progressCoins = coins % REGISTRAR_MILESTONE_COINS
+                  const progressPct = Math.round((progressCoins / REGISTRAR_MILESTONE_COINS) * 100)
+                  const totalEarned = milestones * REGISTRAR_BONUS_USD
+                  return (
+                    <div key={r.registered_by} className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">{r.registered_by}</p>
+                        <span className="text-emerald-400 font-black text-lg">${totalEarned} USD</span>
+                      </div>
+                      <p className="text-2xl font-black text-amber-400 mb-1">
+                        {formatCoins(coins)}<span className="text-base ml-1">🪙</span>
+                      </p>
+                      <p className="text-zinc-500 text-xs mb-3">
+                        {milestones} × ${REGISTRAR_BONUS_USD} completados · {r.order_count} pedidos
+                      </p>
+                      {/* Progress to next milestone */}
+                      <div>
+                        <div className="flex items-center justify-between text-xs text-zinc-600 mb-1">
+                          <span>Siguiente bono</span>
+                          <span>{formatCoins(progressCoins)} / {formatCoins(REGISTRAR_MILESTONE_COINS)} 🪙 ({progressPct}%)</span>
+                        </div>
+                        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-500 rounded-full transition-all"
+                            style={{ width: `${progressPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Sales by registrar (Maga / Neme) */}
-      {registrarStats.length > 0 && (
+      {!isSuperAdmin && registrarStats.length > 0 && (
         <div>
           <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
             Ventas por vendedor
@@ -402,6 +535,17 @@ function StatCard({
       <p className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">{label}</p>
       <p className={`text-2xl font-black ${accent ? 'text-amber-400' : 'text-white'}`}>{value}</p>
       {sub && <p className="text-zinc-600 text-xs mt-1">{sub}</p>}
+    </div>
+  )
+}
+
+function CommissionRow({ label, value, green, bold }: { label: string; value: string; green?: boolean; bold?: boolean }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-zinc-500">{label}</span>
+      <span className={`font-${bold ? 'black' : 'semibold'} ${green ? 'text-emerald-400' : bold ? 'text-amber-400 text-lg' : 'text-zinc-300'}`}>
+        {value}
+      </span>
     </div>
   )
 }

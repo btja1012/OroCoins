@@ -163,6 +163,17 @@ export const sellerCountryMap: Record<Seller, string> = {
   Boster: 'colombia',
 }
 
+// ── Commission config ──────────────────────────────────────────────────────────
+// Collectors get 3% of what they collect as commission (so they owe 97% to OrosPV)
+export const COLLECTOR_COMMISSION_RATE = 0.03
+
+// These sellers are owners/partners — they don't get a commission nor owe themselves
+export const commissionExemptSellers: Seller[] = ['Andres', 'Maga']
+
+// Registrar bonus: every REGISTRAR_MILESTONE_COINS sold → REGISTRAR_BONUS_USD
+export const REGISTRAR_MILESTONE_COINS = 800_000
+export const REGISTRAR_BONUS_USD = 30
+
 function addThousands(n: number): string {
   const parts = n.toString().split('.')
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.')
