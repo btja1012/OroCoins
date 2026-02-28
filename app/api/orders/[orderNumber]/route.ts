@@ -32,6 +32,9 @@ export async function PUT(
     if (!['completed', 'cancelled'].includes(status)) {
       return NextResponse.json({ error: 'Estado inválido.' }, { status: 400 })
     }
+    if (cancelReason && (typeof cancelReason !== 'string' || cancelReason.length > 300)) {
+      return NextResponse.json({ error: 'La razón de cancelación no puede superar 300 caracteres.' }, { status: 400 })
+    }
 
     const db = sql()
     const isAdmin = session.role === 'admin' || session.role === 'super_admin'
@@ -49,10 +52,14 @@ export async function PUT(
       SET status = ${status}, updated_at = NOW(),
           approved_by = ${session.sellerName ?? session.username},
           approved_at = NOW(),
-          cancel_reason = ${status === 'cancelled' && cancelReason ? cancelReason : null}
-      WHERE order_number = ${orderNumber}
+          cancel_reason = ${status === 'cancelled' && cancelReason ? cancelReason.trim() : null}
+      WHERE order_number = ${orderNumber} AND status = 'pending'
       RETURNING seller, package_coins, currency_code
     `
+
+    if (!updated[0]) {
+      return NextResponse.json({ error: 'El pedido ya fue procesado o no existe.' }, { status: 409 })
+    }
 
     // Push notification on approval/rejection (non-blocking)
     if (updated[0]) {
