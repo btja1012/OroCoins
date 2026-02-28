@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+  Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts'
 import type { SellerStat, RegistrarStat } from '@/lib/admin-db'
@@ -91,74 +91,10 @@ export function DashboardCharts({ sellerStats, registrarStats, totalCoinsSold, t
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* ── Donut: coins per colector ── */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Monedas por colector
-          </p>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={coinData}
-                cx="50%"
-                cy="50%"
-                innerRadius={55}
-                outerRadius={90}
-                paddingAngle={3}
-                dataKey="coins"
-              >
-                {coinData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 12, fontSize: 12 }}
-                formatter={(v: number | undefined) => [formatCoins(v ?? 0) + ' 🪙', 'Monedas']}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2">
-            {coinData.map((d, i) => (
-              <div key={d.name} className="flex items-center gap-1.5 text-xs text-zinc-400">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                {d.name}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Bar: coins per colector ── */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Monedas vendidas por colector
-          </p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={coinData} barSize={28}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis
-                tick={{ fill: '#71717a', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-              />
-              <Tooltip
-                contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 12, fontSize: 12 }}
-                formatter={(v: number | undefined) => [formatCoins(v ?? 0) + ' 🪙', 'Monedas']}
-              />
-              <Bar dataKey="coins" radius={[6, 6, 0, 0]}>
-                {coinData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="grid grid-cols-1 gap-6">
 
         {/* ── Bar: orders per colector ── */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 lg:col-span-2">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
             Pedidos por colector
           </p>

@@ -83,7 +83,7 @@ export default async function DashboardPage() {
 
         {/* ─── SELLER VIEW ─── */}
         {session.sellerName && (
-          <SellerView sellerName={session.sellerName} />
+          <SellerView sellerName={session.sellerName} isSeller={session.role === 'seller'} />
         )}
 
         {/* ─── ADMIN / SUPER ADMIN VIEW ─── */}
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
 }
 
 /* ─────────────────── SELLER VIEW ─────────────────── */
-async function SellerView({ sellerName }: { sellerName: string }) {
+async function SellerView({ sellerName, isSeller }: { sellerName: string; isSeller: boolean }) {
   const [stats, orders] = await Promise.all([
     getSellerStats(sellerName),
     getSellerOrders(sellerName),
@@ -131,7 +131,7 @@ async function SellerView({ sellerName }: { sellerName: string }) {
       </div>
 
       {/* Debt & payment card */}
-      <DebtCard stats={stats} sellerName={sellerName} />
+      <DebtCard stats={stats} sellerName={sellerName} isSeller={isSeller} />
 
       {/* Pending orders callout */}
       {orders.filter((o) => (o as Order).status === 'pending').length > 0 && (

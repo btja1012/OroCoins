@@ -9,9 +9,10 @@ import type { SellerStat, CollectorPayment } from '@/lib/admin-db'
 interface DebtCardProps {
   stats: SellerStat | null
   sellerName: string
+  isSeller?: boolean
 }
 
-export function DebtCard({ stats, sellerName }: DebtCardProps) {
+export function DebtCard({ stats, sellerName, isSeller = true }: DebtCardProps) {
   const [payments, setPayments] = useState<CollectorPayment[]>([])
   const [confirmedTotalUsd, setConfirmedTotalUsd] = useState(0)
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 })
@@ -149,8 +150,8 @@ export function DebtCard({ stats, sellerName }: DebtCardProps) {
         )}
       </div>
 
-      {/* Botón reportar pago */}
-      <div className="px-5 pb-5">
+      {/* Botón reportar pago — solo colectores */}
+      {isSeller && <div className="px-5 pb-5">
         <button
           type="button"
           onClick={() => { setShowForm(!showForm); setError('') }}
@@ -211,7 +212,7 @@ export function DebtCard({ stats, sellerName }: DebtCardProps) {
             </button>
           </form>
         )}
-      </div>
+      </div>}
 
       {/* Historial de pagos */}
       {payments.length > 0 && (

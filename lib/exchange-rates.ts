@@ -20,7 +20,7 @@ export async function getUSDRates(): Promise<Record<string, number>> {
     const data = await res.json()
     const rates = data?.rates ?? {}
 
-    for (const currency of ['MXN', 'COP', 'VES']) {
+    for (const currency of ['MXN', 'COP', 'VES', 'CRC']) {
       if (typeof rates[currency] === 'number') {
         base[currency] = rates[currency]
       }
