@@ -103,3 +103,10 @@ CREATE INDEX IF NOT EXISTS idx_collector_payments_seller
   ON collector_payments (seller_name, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_collector_payments_status
   ON collector_payments (status);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key        VARCHAR(50) PRIMARY KEY,
+  value      TEXT        NOT NULL,
+  updated_by TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);

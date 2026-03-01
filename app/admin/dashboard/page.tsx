@@ -29,6 +29,7 @@ import { OrdersTable } from '@/components/admin/OrdersTable'
 import { TabTitle } from '@/components/admin/TabTitle'
 import { SessionWarning } from '@/components/admin/SessionWarning'
 import { PendingPayments } from '@/components/admin/PendingPayments'
+import { VesRateConfig } from '@/components/admin/VesRateConfig'
 import { DebtCard } from '@/components/seller/DebtCard'
 import type { Order } from '@/lib/db'
 
@@ -326,6 +327,9 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">
             Comisiones y pagos
           </h3>
+
+          {/* VES manual exchange rate */}
+          <VesRateConfig />
 
           {/* Pending payment requests from collectors */}
           <PendingPayments />

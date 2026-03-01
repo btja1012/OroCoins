@@ -289,6 +289,22 @@ export async function reviewCollectorPayment(
   `
 }
 
+export async function getAppSetting(key: string): Promise<string | null> {
+  const db = sql()
+  const result = await db`SELECT value FROM app_settings WHERE key = ${key} LIMIT 1`
+  return (result[0]?.value as string) ?? null
+}
+
+export async function setAppSetting(key: string, value: string, updatedBy: string): Promise<void> {
+  const db = sql()
+  await db`
+    INSERT INTO app_settings (key, value, updated_by, updated_at)
+    VALUES (${key}, ${value}, ${updatedBy}, NOW())
+    ON CONFLICT (key) DO UPDATE
+      SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = NOW()
+  `
+}
+
 export async function createAdminUser(data: {
   username: string
   passwordHash: string
