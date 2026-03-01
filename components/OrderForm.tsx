@@ -10,8 +10,7 @@ import {
   type Package,
   formatPrice,
   formatCoins,
-  getCoinRate,
-  roundToNearest500,
+  calcCustomCoins,
 } from '@/lib/data'
 
 export function OrderForm() {
@@ -66,9 +65,8 @@ export function OrderForm() {
     setIsCustomSelected(false)
     setSelectedPackage(null)
     if (selectedCountry) {
-      const rate = getCoinRate(selectedCountry)
       const num = parseFloat(value.replace(',', '.'))
-      setCustomCoins(!isNaN(num) && num > 0 ? roundToNearest500(num * rate) : 0)
+      setCustomCoins(!isNaN(num) && num > 0 ? calcCustomCoins(selectedCountry, num) : 0)
     }
   }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder, sql } from '@/lib/db'
-import { getCountry, sellers, countryToSeller, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
+import { getCountry, sellers, countryToSeller, calcCustomCoins, formatCoins, formatPrice } from '@/lib/data'
 import { sendPushToSeller } from '@/lib/push'
 import { getSession } from '@/lib/session'
 
@@ -53,8 +53,7 @@ export async function POST(request: NextRequest) {
     let isCustom = false
 
     if (!pkg && customPrice && customCoins) {
-      const rate = country.packages[0].coins / country.packages[0].price
-      const expectedCoins = roundToNearest500(parseFloat(customPrice) * rate)
+      const expectedCoins = calcCustomCoins(country, parseFloat(customPrice))
       if (Math.abs(expectedCoins - parseInt(customCoins)) > 1) {
         return NextResponse.json({ error: 'Cálculo de monedas inválido.' }, { status: 400 })
       }

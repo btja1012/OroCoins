@@ -161,7 +161,7 @@ export function getCountry(slug: string): Country | undefined {
   return countries.find((c) => c.slug === slug)
 }
 
-/** Rate = coins per currency unit (consistent across all packages) */
+/** Rate = coins per currency unit from the first package */
 export function getCoinRate(country: Country): number {
   return country.packages[0].coins / country.packages[0].price
 }
@@ -169,6 +169,18 @@ export function getCoinRate(country: Country): number {
 /** Round coins to nearest 500 */
 export function roundToNearest500(coins: number): number {
   return Math.round(coins / 500) * 500
+}
+
+/**
+ * Calculate coins for a custom amount.
+ * If the amount matches a package price exactly, use that package's coins
+ * (handles non-linear rates like Binance bulk discounts).
+ * Otherwise falls back to the base rate × amount.
+ */
+export function calcCustomCoins(country: Country, amount: number): number {
+  const exactPkg = country.packages.find((p) => Math.abs(p.price - amount) < 0.001)
+  if (exactPkg) return exactPkg.coins
+  return roundToNearest500(amount * getCoinRate(country))
 }
 
 // Sellers and their assigned countries
