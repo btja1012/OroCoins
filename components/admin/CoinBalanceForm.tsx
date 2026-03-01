@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Pencil, Check, X, Plus } from 'lucide-react'
+import { Loader2, Pencil, Check, X, Plus, AlertTriangle } from 'lucide-react'
 import { formatCoins } from '@/lib/data'
 import type { CoinAccount } from '@/lib/admin-db'
+
+const LOW_BALANCE_THRESHOLD = 50_000
 
 export function CoinBalanceForm({
   accounts: initial,
@@ -71,11 +73,17 @@ export function CoinBalanceForm({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {accounts.map((account) => (
+      {accounts.map((account) => {
+        const isLow = account.current_balance < LOW_BALANCE_THRESHOLD
+        return (
         <div
           key={account.name}
           className={`bg-zinc-900 border rounded-2xl p-5 transition-colors ${
-            successName === account.name ? 'border-emerald-500/40' : 'border-zinc-800'
+            successName === account.name
+              ? 'border-emerald-500/40'
+              : isLow
+                ? 'border-red-500/30'
+                : 'border-zinc-800'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
@@ -141,17 +149,30 @@ export function CoinBalanceForm({
             </div>
           ) : (
             <div>
-              <p className={`text-3xl font-black ${successName === account.name ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <p className={`text-3xl font-black ${successName === account.name ? 'text-emerald-400' : isLow ? 'text-red-400' : 'text-amber-400'}`}>
                 {formatCoins(account.current_balance)}
                 <span className="text-lg ml-1">🪙</span>
               </p>
-              <p className="text-zinc-600 text-xs mt-1">
-                {successName === account.name ? '✓ Actualizado' : 'disponibles'}
+              <p className={`text-xs mt-1 flex items-center gap-1 ${
+                successName === account.name
+                  ? 'text-emerald-400'
+                  : isLow
+                    ? 'text-red-400/80'
+                    : 'text-zinc-600'
+              }`}>
+                {successName === account.name ? (
+                  '✓ Actualizado'
+                ) : isLow ? (
+                  <><AlertTriangle size={11} /> Saldo bajo — recarga pronto</>
+                ) : (
+                  'disponibles'
+                )}
               </p>
             </div>
           )}
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

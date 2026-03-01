@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { getOrderByNumber } from '@/lib/db'
 import { getCountry, formatPrice, formatCoins } from '@/lib/data'
 import { CopyButton } from '@/components/CopyButton'
+import { OrderPoller } from '@/components/OrderPoller'
 
 interface Props {
   params: Promise<{ orderNumber: string }>
@@ -28,6 +29,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-zinc-950">
+      <OrderPoller status={order.status} />
       {/* Header */}
       <div className="sticky top-0 z-10 bg-zinc-950/90 backdrop-blur border-b border-zinc-900">
         <div className="container mx-auto px-4 h-14 flex items-center gap-3">
@@ -131,7 +133,13 @@ export default async function OrderConfirmationPage({ params }: Props) {
                 </div>
               </div>
             )}
-            <PaymentRow label="Nombre" value={payment.name} />
+            <div className="flex items-center justify-between py-2 last:border-0 border-b border-zinc-800/50">
+              <span className="text-zinc-500 text-sm">Nombre</span>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium text-sm">{payment.name}</span>
+                <CopyButton text={payment.name} />
+              </div>
+            </div>
           </div>
 
           <div className="mt-4 bg-amber-500/8 border border-amber-500/20 rounded-xl p-3 text-amber-300/80 text-xs leading-relaxed">

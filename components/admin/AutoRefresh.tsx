@@ -56,9 +56,14 @@ export function AutoRefresh({ intervalMs = 30000 }: { intervalMs?: number }) {
     ? `hace ${elapsed} seg`
     : `hace ${Math.floor(elapsed / 60)} min`
 
+  const timeStr = new Date(lastUpdated).toLocaleTimeString('es', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
   return (
     <p className="text-zinc-700 text-xs text-right mb-2">
-      Actualizado {label}
+      Actualizado {label} · {timeStr}
     </p>
   )
 }
