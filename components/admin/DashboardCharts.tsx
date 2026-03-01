@@ -1,32 +1,24 @@
 'use client'
 
 import {
-  Cell, Tooltip, ResponsiveContainer,
+  Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts'
-import type { SellerStat, RegistrarStat } from '@/lib/admin-db'
+import type { RegistrarStat } from '@/lib/admin-db'
 import { formatCoins } from '@/lib/data'
 
-const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#f97316']
 
 interface Props {
-  sellerStats: SellerStat[]
   registrarStats: RegistrarStat[]
   totalCoinsSold: number
   totalAvailable: number
 }
 
-export function DashboardCharts({ sellerStats, registrarStats, totalCoinsSold, totalAvailable }: Props) {
+export function DashboardCharts({ registrarStats, totalCoinsSold, totalAvailable }: Props) {
   const vendedoraData = registrarStats.map((r) => ({
     name: r.registered_by,
     coins: Number(r.total_coins),
     pedidos: Number(r.order_count),
-  }))
-
-  const coinData = sellerStats.map((s) => ({
-    name: s.seller,
-    coins: Number(s.total_coins),
-    pedidos: Number(s.order_count),
   }))
 
   const totalCoins = totalCoinsSold + totalAvailable
@@ -91,32 +83,6 @@ export function DashboardCharts({ sellerStats, registrarStats, totalCoinsSold, t
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6">
-
-        {/* ── Bar: orders per colector ── */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            Pedidos por colector
-          </p>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={coinData} barSize={36} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
-              <XAxis type="number" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis dataKey="name" type="category" tick={{ fill: '#a1a1aa', fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} width={60} />
-              <Tooltip
-                contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 12, fontSize: 12 }}
-                formatter={(v: number | undefined) => [v ?? 0, 'Pedidos']}
-              />
-              <Bar dataKey="pedidos" radius={[0, 6, 6, 0]}>
-                {coinData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-      </div>
     </div>
   )
 }

@@ -256,7 +256,6 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
       {/* Charts — super admin only */}
       {isSuperAdmin && (
         <DashboardCharts
-          sellerStats={sellerStats}
           registrarStats={registrarStats}
           totalCoinsSold={totalCoinsSold}
           totalAvailable={totalAvailable}
