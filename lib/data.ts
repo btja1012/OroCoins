@@ -175,17 +175,22 @@ export function roundToNearest500(coins: number): number {
 export const sellers = ['Andres', 'Dulius', 'Natasha', 'Boster', 'Maga'] as const
 export type Seller = (typeof sellers)[number]
 
-export const sellerCountryMap: Record<Seller, string | string[]> = {
-  Andres: ['costa-rica', 'binance'],
+export const sellerCountryMap: Record<Seller, string> = {
+  Andres: 'costa-rica',
   Dulius: 'mexico',
   Natasha: 'ecuador',
   Maga: 'venezuela',
   Boster: 'colombia',
 }
 
-export function getSellerCountries(seller: Seller): string[] {
-  const val = sellerCountryMap[seller]
-  return Array.isArray(val) ? val : [val]
+// Reverse map: which seller handles each country/method
+export const countryToSeller: Record<string, Seller> = {
+  'costa-rica': 'Andres',
+  'mexico': 'Dulius',
+  'ecuador': 'Natasha',
+  'venezuela': 'Maga',
+  'colombia': 'Boster',
+  'binance': 'Andres',
 }
 
 // ── Commission config ──────────────────────────────────────────────────────────

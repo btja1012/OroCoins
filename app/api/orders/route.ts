@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder, sql } from '@/lib/db'
-import { getCountry, sellers, getSellerCountries, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
+import { getCountry, sellers, countryToSeller, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
 import { sendPushToSeller } from '@/lib/push'
 import { getSession } from '@/lib/session'
 
@@ -12,16 +12,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount, notes, countrySlug: requestedCountrySlug } = body
+    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount, notes, countrySlug } = body
 
-    if (!seller || !sellers.includes(seller)) {
-      return NextResponse.json({ error: 'Vendedor no válido.' }, { status: 400 })
-    }
     if (!gameUsername?.trim()) {
       return NextResponse.json({ error: 'La referencia de comprobante es requerida.' }, { status: 400 })
     }
     if (!coinAccount || !['OrosPV1', 'OrosPV2'].includes(coinAccount)) {
       return NextResponse.json({ error: 'Debes seleccionar la cuenta de Oros.' }, { status: 400 })
+    }
+
+    // Resolve seller: prefer countrySlug lookup, fall back to sent seller
+    const resolvedSeller: string | undefined = (countrySlug && countryToSeller[countrySlug as string])
+      ? countryToSeller[countrySlug as string]
+      : (seller && sellers.includes(seller) ? seller : undefined)
+
+    if (!resolvedSeller) {
+      return NextResponse.json({ error: 'País o vendedor no válido.' }, { status: 400 })
     }
 
     // ── Duplicate comprobante check ──
@@ -37,11 +43,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const sellerCountries = getSellerCountries(seller as Parameters<typeof getSellerCountries>[0])
-    const countrySlug = requestedCountrySlug && sellerCountries.includes(requestedCountrySlug)
-      ? requestedCountrySlug
-      : sellerCountries[0]
-    const country = getCountry(countrySlug)
+    const resolvedSlug = (countrySlug as string) ?? ''
+    const country = getCountry(resolvedSlug)
     if (!country) {
       return NextResponse.json({ error: 'País no válido.' }, { status: 400 })
     }
@@ -71,7 +74,7 @@ export async function POST(request: NextRequest) {
       country: country.name,
       countrySlug: country.slug,
       gameUsername: gameUsername.trim(),
-      seller,
+      seller: resolvedSeller,
       registeredBy: session.sellerName ?? session.username,
       packageId: pkg.id,
       packageCoins: pkg.coins,
@@ -84,8 +87,8 @@ export async function POST(request: NextRequest) {
     })
 
     // ── Push notification (non-blocking) ──
-    sendPushToSeller(seller, {
-      title: `🪙 Nuevo pedido — ${country.flag} ${seller}`,
+    sendPushToSeller(resolvedSeller, {
+      title: `🪙 Nuevo pedido — ${country.flag} ${resolvedSeller}`,
       body: `${formatCoins(pkg.coins)} 🪙 · ${formatPrice(pkg.price, country.currencyCode)} · Ref: ${gameUsername.trim()}`,
       url: '/admin/dashboard',
     })
