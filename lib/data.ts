@@ -135,6 +135,26 @@ export const countries: Country[] = [
       extra: 'Cuenta de Ahorro',
     },
   },
+  {
+    name: 'Binance',
+    slug: 'binance',
+    flag: '🟡',
+    currency: 'Dólares (USDT)',
+    currencySymbol: '$',
+    currencyCode: 'USD',
+    packages: [
+      { id: 'bn-1', price: 1.10, coins: 1500 },
+      { id: 'bn-2', price: 5.50, coins: 7500 },
+      { id: 'bn-3', price: 11, coins: 15000, popular: true },
+      { id: 'bn-4', price: 55, coins: 80000 },
+      { id: 'bn-5', price: 110, coins: 160000 },
+    ],
+    payment: {
+      method: 'Binance',
+      number: '1022232316',
+      name: 'ID Binance',
+    },
+  },
 ]
 
 export function getCountry(slug: string): Country | undefined {
@@ -155,12 +175,17 @@ export function roundToNearest500(coins: number): number {
 export const sellers = ['Andres', 'Dulius', 'Natasha', 'Boster', 'Maga'] as const
 export type Seller = (typeof sellers)[number]
 
-export const sellerCountryMap: Record<Seller, string> = {
-  Andres: 'costa-rica',
+export const sellerCountryMap: Record<Seller, string | string[]> = {
+  Andres: ['costa-rica', 'binance'],
   Dulius: 'mexico',
   Natasha: 'ecuador',
   Maga: 'venezuela',
   Boster: 'colombia',
+}
+
+export function getSellerCountries(seller: Seller): string[] {
+  const val = sellerCountryMap[seller]
+  return Array.isArray(val) ? val : [val]
 }
 
 // ── Commission config ──────────────────────────────────────────────────────────

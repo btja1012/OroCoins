@@ -6,7 +6,7 @@ import { Loader2, AlertCircle, ChevronRight } from 'lucide-react'
 import {
   countries,
   sellers,
-  sellerCountryMap,
+  getSellerCountries,
   type Country,
   type Package,
   type Seller,
@@ -20,6 +20,7 @@ export function OrderForm() {
   const router = useRouter()
 
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null)
+  const [selectedCountrySlug, setSelectedCountrySlug] = useState<string | null>(null)
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [customCoins, setCustomCoins] = useState(0)
@@ -46,12 +47,26 @@ export function OrderForm() {
       .catch(() => null)
   }, [])
 
-  const selectedCountry: Country | null = selectedSeller
-    ? (countries.find((c) => c.slug === sellerCountryMap[selectedSeller]) ?? null)
+  const sellerCountries = selectedSeller ? getSellerCountries(selectedSeller) : []
+  const hasMultipleCountries = sellerCountries.length > 1
+  // Auto-select country when seller has only one option
+  const effectiveCountrySlug = selectedCountrySlug ?? (sellerCountries.length === 1 ? sellerCountries[0] : null)
+  const selectedCountry: Country | null = effectiveCountrySlug
+    ? (countries.find((c) => c.slug === effectiveCountrySlug) ?? null)
     : null
 
   const handleSellerSelect = (seller: Seller) => {
     setSelectedSeller(seller)
+    setSelectedCountrySlug(null)
+    setSelectedPackage(null)
+    setIsCustomSelected(false)
+    setCustomAmount('')
+    setCustomCoins(0)
+    setError('')
+  }
+
+  const handleCountrySelect = (slug: string) => {
+    setSelectedCountrySlug(slug)
     setSelectedPackage(null)
     setIsCustomSelected(false)
     setCustomAmount('')
@@ -113,6 +128,7 @@ export function OrderForm() {
         seller: selectedSeller,
         gameUsername: gameUsername.trim(),
         coinAccount,
+        ...(hasMultipleCountries && effectiveCountrySlug ? { countrySlug: effectiveCountrySlug } : {}),
       }
 
       if (selectedPackage) {
@@ -148,7 +164,7 @@ export function OrderForm() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {sellers.map((seller) => {
             const active = selectedSeller === seller
-            const country = countries.find((c) => c.slug === sellerCountryMap[seller])
+            const country = countries.find((c) => c.slug === getSellerCountries(seller)[0])
             return (
               <button
                 key={seller}
@@ -171,9 +187,40 @@ export function OrderForm() {
         </div>
       </Section>
 
-      {/* ── PASO 2: Paquete ── */}
+      {/* ── PASO 1.5: Método (solo si el colector tiene múltiples países) ── */}
+      {selectedSeller && hasMultipleCountries && (
+        <Section step={2} title="Método de pago">
+          <div className="grid grid-cols-2 gap-2">
+            {sellerCountries.map((slug) => {
+              const c = countries.find((x) => x.slug === slug)
+              if (!c) return null
+              const active = effectiveCountrySlug === slug
+              return (
+                <button
+                  key={slug}
+                  type="button"
+                  onClick={() => handleCountrySelect(slug)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-semibold transition-all text-left
+                    ${active
+                      ? 'bg-amber-500 border-amber-500 text-black'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-white'
+                    }`}
+                >
+                  <span className="text-xl leading-none">{c.flag}</span>
+                  <div>
+                    <p className={`font-bold text-sm ${active ? 'text-black' : 'text-white'}`}>{c.name}</p>
+                    <p className={`text-xs ${active ? 'text-black/60' : 'text-zinc-500'}`}>{c.payment.method}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </Section>
+      )}
+
+      {/* ── PASO 2 (o 3): Paquete ── */}
       {selectedCountry && (
-        <Section step={2} title={`Paquete — ${selectedCountry.currency}`}>
+        <Section step={hasMultipleCountries ? 3 : 2} title={`Paquete — ${selectedCountry.currency}`}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
             {selectedCountry.packages.map((pkg) => {
               const active = selectedPackage?.id === pkg.id
@@ -249,9 +296,9 @@ export function OrderForm() {
         </Section>
       )}
 
-      {/* ── PASO 3: Detalles ── */}
+      {/* ── PASO 3 (o 4): Detalles ── */}
       {selectedCountry && hasSelection && (
-        <Section step={3} title="Detalles del pedido">
+        <Section step={hasMultipleCountries ? 4 : 3} title="Detalles del pedido">
           {/* Resumen selección */}
           <div className="flex items-center justify-between bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 mb-4">
             <div className="flex items-center gap-2 text-sm text-zinc-400">

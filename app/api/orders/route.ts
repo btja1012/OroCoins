@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOrder, sql } from '@/lib/db'
-import { getCountry, sellers, sellerCountryMap, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
+import { getCountry, sellers, getSellerCountries, roundToNearest500, formatCoins, formatPrice } from '@/lib/data'
 import { sendPushToSeller } from '@/lib/push'
 import { getSession } from '@/lib/session'
 
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount, notes } = body
+    const { packageId, gameUsername, seller, customPrice, customCoins, coinAccount, notes, countrySlug: requestedCountrySlug } = body
 
     if (!seller || !sellers.includes(seller)) {
       return NextResponse.json({ error: 'Vendedor no válido.' }, { status: 400 })
@@ -37,7 +37,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const countrySlug = sellerCountryMap[seller as keyof typeof sellerCountryMap]
+    const sellerCountries = getSellerCountries(seller as Parameters<typeof getSellerCountries>[0])
+    const countrySlug = requestedCountrySlug && sellerCountries.includes(requestedCountrySlug)
+      ? requestedCountrySlug
+      : sellerCountries[0]
     const country = getCountry(countrySlug)
     if (!country) {
       return NextResponse.json({ error: 'País no válido.' }, { status: 400 })
