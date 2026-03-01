@@ -165,51 +165,7 @@ async function SellerView({ sellerName, isSeller }: { sellerName: string; isSell
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
           Comprobantes registrados
         </h3>
-        <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
-          {orders.length === 0 ? (
-            <p className="text-zinc-600 text-center py-12">No hay pedidos registrados aún.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
-                    <th className="text-left px-4 py-3">Ref. Comprobante</th>
-                    <th className="text-right px-4 py-3">Monedas</th>
-                    <th className="text-right px-4 py-3">Monto</th>
-                    <th className="text-right px-4 py-3">Fecha</th>
-                    <th className="text-center px-4 py-3">Estado</th>
-                    <th className="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(orders as Order[]).map((order) => (
-                    <tr key={order.id} className="border-b border-zinc-900 hover:bg-amber-500/5 transition-colors">
-                      <td className="px-4 py-3 font-mono text-zinc-300">{order.game_username}</td>
-                      <td className="px-4 py-3 text-right text-amber-400 font-bold">
-                        {formatCoins(order.package_coins)} 🪙
-                        {order.is_custom && <span className="text-zinc-600 text-xs ml-1">(custom)</span>}
-                      </td>
-                      <td className="px-4 py-3 text-right text-white font-semibold">
-                        {formatPrice(Number(order.package_price), order.currency_code)}
-                      </td>
-                      <td className="px-4 py-3 text-right text-zinc-500">
-                        {new Date(order.created_at).toLocaleDateString('es', {
-                          day: '2-digit', month: 'short', year: '2-digit',
-                        })}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <StatusBadge status={order.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <OrderActions orderNumber={order.order_number} status={order.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <OrdersTable orders={orders as Order[]} sellers={[sellerName]} />
       </div>
     </div>
   )
@@ -528,23 +484,5 @@ function CommissionRow({ label, value, green, bold }: { label: string; value: st
         {value}
       </span>
     </div>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    pending: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-    completed: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-    cancelled: 'bg-red-500/10 text-red-400 border-red-500/30',
-  }
-  const labels: Record<string, string> = {
-    pending: 'Pendiente',
-    completed: 'Completado',
-    cancelled: 'Cancelado',
-  }
-  return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${styles[status] ?? styles.pending}`}>
-      {labels[status] ?? status}
-    </span>
   )
 }
