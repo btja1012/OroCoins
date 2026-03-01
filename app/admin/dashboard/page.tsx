@@ -221,7 +221,7 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     getGlobalStats(),
     getDailyStats(),
     getAllSellerStats(),
-    getRecentOrders(200),
+    getRecentOrders(100),
     getCoinAccounts(),
     getRegistrarStats(),
     getCoinAccountHistory(30),

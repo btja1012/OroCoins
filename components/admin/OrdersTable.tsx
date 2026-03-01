@@ -61,7 +61,7 @@ function exportCSV(orders: Order[]) {
   URL.revokeObjectURL(url)
 }
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 20
 
 export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: string[] }) {
   const [search, setSearch] = useState('')
