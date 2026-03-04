@@ -374,26 +374,6 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         </div>
       )}
 
-      {/* Sales by registrar (Maga / Neme) */}
-      {registrarStats.length > 0 && (
-        <div>
-          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
-            Ventas por vendedor
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {registrarStats.map((r) => (
-              <div key={r.registered_by} className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
-                <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">{r.registered_by}</p>
-                <p className="text-3xl font-black text-amber-400">
-                  {formatCoins(Number(r.total_coins))}<span className="text-lg ml-1">🪙</span>
-                </p>
-                <p className="text-zinc-500 text-sm mt-1">{r.order_count} pedidos registrados</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Per-collector breakdown */}
       <div>
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
