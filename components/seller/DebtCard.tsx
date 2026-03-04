@@ -151,14 +151,29 @@ export function DebtCard({ stats, sellerName, isSeller = true }: DebtCardProps) 
       </div>
 
       {/* Botón reportar pago — solo colectores */}
-      {isSeller && <div className="px-5 pb-5">
+      {isSeller && <div className="px-5 pb-5 space-y-2">
+        {/* Botón rápido "Ya pagué el total" */}
+        {balanceUsd !== null && balanceUsd > 0 && pendingPayments.length === 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setAmountUsd(balanceUsd.toFixed(2))
+              setShowForm(true)
+              setError('')
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-sm transition-colors"
+          >
+            💳 Ya pagué ${balanceUsd.toFixed(2)} USD
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => { setShowForm(!showForm); setError('') }}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white hover:border-zinc-500 text-sm font-semibold transition-colors"
         >
           {showForm ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          {showForm ? 'Cancelar' : '💳 Reportar Pago a OrosPV'}
+          {showForm ? 'Cancelar' : 'Ingresar otro monto'}
         </button>
 
         {/* Formulario de pago */}

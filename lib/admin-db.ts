@@ -312,6 +312,21 @@ export async function reviewCollectorPayment(
   `
 }
 
+export async function getAllConfirmedPaymentsTotalBySellerUSD(): Promise<Record<string, number>> {
+  const db = sql()
+  const result = await db`
+    SELECT seller_name, COALESCE(SUM(amount_usd), 0)::numeric AS total
+    FROM collector_payments
+    WHERE status = 'confirmed'
+    GROUP BY seller_name
+  `
+  const map: Record<string, number> = {}
+  for (const row of result as { seller_name: string; total: string }[]) {
+    map[row.seller_name] = Number(row.total)
+  }
+  return map
+}
+
 export async function getAppSetting(key: string): Promise<string | null> {
   const db = sql()
   const result = await db`SELECT value FROM app_settings WHERE key = ${key} LIMIT 1`

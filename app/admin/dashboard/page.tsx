@@ -13,6 +13,7 @@ import {
   getCoinAccountHistory,
   getPendingOrderCount,
   getDailyStats,
+  getAllConfirmedPaymentsTotalBySellerUSD,
 } from '@/lib/admin-db'
 import {
   countries, formatPrice, formatCoins, sellers,
@@ -27,6 +28,7 @@ import { OrdersTable } from '@/components/admin/OrdersTable'
 import { TabTitle } from '@/components/admin/TabTitle'
 import { SessionWarning } from '@/components/admin/SessionWarning'
 import { ExchangeRateConfig } from '@/components/admin/ExchangeRateConfig'
+import { CollectorPaymentsReview } from '@/components/admin/CollectorPaymentsReview'
 import { DebtCard } from '@/components/seller/DebtCard'
 import { getUSDRates, localToUSD } from '@/lib/exchange-rates'
 import { commissionExemptSellers } from '@/lib/data'
@@ -175,7 +177,7 @@ const WEEKLY_GOAL = 1_000_000
 const KNOWN_REGISTRARS = ['Maga', 'Neme']
 
 async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
-  const [globalStats, dailyStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory, weeklyStats, usdRates] = await Promise.all([
+  const [globalStats, dailyStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory, weeklyStats, usdRates, confirmedPayments] = await Promise.all([
     getGlobalStats(),
     getDailyStats(),
     getAllSellerStats(),
@@ -185,19 +187,19 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     getCoinAccountHistory(30),
     getWeeklyRegistrarStats(),
     getUSDRates(),
+    getAllConfirmedPaymentsTotalBySellerUSD(),
   ])
 
   const COMMISSION_RATE = 0.03
-  // Debt per seller in USD (total_amount - 3% commission), null if no rate available
+  // Debt per seller in USD (total_amount - 3% commission - confirmed payments)
   const sellerDebtUSD: Record<string, number | null> = {}
   for (const s of sellerStats) {
     const isExempt = (commissionExemptSellers as string[]).includes(s.seller)
     const usd = localToUSD(Number(s.total_amount), s.currency_code, usdRates)
-    sellerDebtUSD[s.seller] = usd === null
-      ? null
-      : isExempt
-        ? usd
-        : usd * (1 - COMMISSION_RATE)
+    if (usd === null) { sellerDebtUSD[s.seller] = null; continue }
+    const gross = isExempt ? usd : usd * (1 - COMMISSION_RATE)
+    const paid = confirmedPayments[s.seller] ?? 0
+    sellerDebtUSD[s.seller] = Math.max(0, gross - paid)
   }
 
   // Ensure all known registrars appear even with 0 sales this week
@@ -382,12 +384,16 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
 
       {/* ─── Exchange rates — super_admin only ─── */}
       {isSuperAdmin && (
-        <div>
-          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
-            Tipos de cambio
-          </h3>
-          <ExchangeRateConfig />
-        </div>
+        <>
+          <div>
+            <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
+              Tipos de cambio
+            </h3>
+            <ExchangeRateConfig />
+          </div>
+
+          <CollectorPaymentsReview />
+        </>
       )}
 
       {/* Per-collector breakdown */}
