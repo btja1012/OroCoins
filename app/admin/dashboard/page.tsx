@@ -28,6 +28,8 @@ import { TabTitle } from '@/components/admin/TabTitle'
 import { SessionWarning } from '@/components/admin/SessionWarning'
 import { ExchangeRateConfig } from '@/components/admin/ExchangeRateConfig'
 import { DebtCard } from '@/components/seller/DebtCard'
+import { getUSDRates, localToUSD } from '@/lib/exchange-rates'
+import { commissionExemptSellers } from '@/lib/data'
 import type { Order } from '@/lib/db'
 
 export const metadata = { title: 'Dashboard — Oros Pura Vida' }
@@ -173,7 +175,7 @@ const WEEKLY_GOAL = 1_000_000
 const KNOWN_REGISTRARS = ['Maga', 'Neme']
 
 async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
-  const [globalStats, dailyStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory, weeklyStats] = await Promise.all([
+  const [globalStats, dailyStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory, weeklyStats, usdRates] = await Promise.all([
     getGlobalStats(),
     getDailyStats(),
     getAllSellerStats(),
@@ -182,7 +184,21 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     getRegistrarStats(),
     getCoinAccountHistory(30),
     getWeeklyRegistrarStats(),
+    getUSDRates(),
   ])
+
+  const COMMISSION_RATE = 0.03
+  // Debt per seller in USD (total_amount - 3% commission), null if no rate available
+  const sellerDebtUSD: Record<string, number | null> = {}
+  for (const s of sellerStats) {
+    const isExempt = (commissionExemptSellers as string[]).includes(s.seller)
+    const usd = localToUSD(Number(s.total_amount), s.currency_code, usdRates)
+    sellerDebtUSD[s.seller] = usd === null
+      ? null
+      : isExempt
+        ? usd
+        : usd * (1 - COMMISSION_RATE)
+  }
 
   // Ensure all known registrars appear even with 0 sales this week
   const weeklyWithDefaults = KNOWN_REGISTRARS.map((name) => {
@@ -388,6 +404,8 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
             <div className="md:hidden space-y-2">
               {sellerStats.map((s) => {
                 const country = countries.find((c) => c.slug === s.country_slug)
+                const debtUSD = sellerDebtUSD[s.seller]
+                const isExempt = (commissionExemptSellers as string[]).includes(s.seller)
                 return (
                   <div key={s.seller} className="bg-zinc-950 border border-amber-500/10 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-1">
@@ -397,9 +415,17 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                       </div>
                       <p className="text-white font-bold text-sm">{formatPrice(Number(s.total_amount), s.currency_code)}</p>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1">
-                      <span className="text-amber-400 font-bold">{formatCoins(Number(s.total_coins))} 🪙</span>
-                      <span>{s.order_count} pedidos</span>
+                    <div className="flex items-center justify-between text-xs mt-1">
+                      <div className="flex items-center gap-3 text-zinc-500">
+                        <span className="text-amber-400 font-bold">{formatCoins(Number(s.total_coins))} 🪙</span>
+                        <span>{s.order_count} pedidos</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-zinc-500 text-[10px]">Debe a OrosPV{!isExempt && ' (−3%)'}</p>
+                        <p className="text-emerald-400 font-bold">
+                          {debtUSD === null ? '—' : `$${debtUSD.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )
@@ -417,11 +443,14 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                       <th className="text-right px-4 py-3">Pedidos</th>
                       <th className="text-right px-4 py-3">Monedas</th>
                       <th className="text-right px-4 py-3">Total recaudado</th>
+                      <th className="text-right px-4 py-3">Debe a OrosPV</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sellerStats.map((s) => {
                       const country = countries.find((c) => c.slug === s.country_slug)
+                      const debtUSD = sellerDebtUSD[s.seller]
+                      const isExempt = (commissionExemptSellers as string[]).includes(s.seller)
                       return (
                         <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
                           <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
@@ -434,6 +463,14 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                           </td>
                           <td className="px-4 py-3 text-right text-white font-bold">
                             {formatPrice(Number(s.total_amount), s.currency_code)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-emerald-400 font-bold">
+                              {debtUSD === null ? '—' : `$${debtUSD.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            </span>
+                            {!isExempt && debtUSD !== null && (
+                              <span className="block text-zinc-600 text-xs">−3% comisión</span>
+                            )}
                           </td>
                         </tr>
                       )
