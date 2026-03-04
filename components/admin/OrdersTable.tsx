@@ -61,7 +61,7 @@ function exportCSV(orders: Order[]) {
   URL.revokeObjectURL(url)
 }
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 5
 
 export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: string[] }) {
   const [search, setSearch] = useState('')
@@ -107,16 +107,16 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
   return (
     <div className="space-y-3">
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center w-full">
         {/* Search */}
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[180px]">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
           <input
             type="text"
             placeholder="Buscar orden o comprobante..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40"
           />
         </div>
 
@@ -124,7 +124,7 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+          className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
         >
           <option value="all">Todos los estados</option>
           <option value="pending">Pendiente</option>
@@ -136,7 +136,7 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
         <select
           value={sellerFilter}
           onChange={(e) => setSellerFilter(e.target.value)}
-          className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+          className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
         >
           <option value="all">Todos los colectores</option>
           {sellers.map((s) => (
@@ -148,7 +148,7 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
         <select
           value={countryFilter}
           onChange={(e) => setCountryFilter(e.target.value)}
-          className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+          className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
         >
           <option value="all">Todos los países</option>
           {countries.map((c) => (
@@ -163,14 +163,14 @@ export function OrdersTable({ orders, sellers }: { orders: Order[]; sellers: str
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+            className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-2 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
           />
           <span className="text-zinc-600 text-xs">—</span>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
+            className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-2 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/40"
           />
           {hasDateFilter && (
             <button

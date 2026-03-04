@@ -9,6 +9,7 @@ import {
   getSellerOrders,
   getCoinAccounts,
   getRegistrarStats,
+  getWeeklyRegistrarStats,
   getCoinAccountHistory,
   getPendingOrderCount,
   getDailyStats,
@@ -172,8 +173,11 @@ async function SellerView({ sellerName, isSeller }: { sellerName: string; isSell
 }
 
 /* ─────────────────── ADMIN VIEW ─────────────────── */
+const WEEKLY_GOAL = 1_000_000
+const KNOWN_REGISTRARS = ['Maga', 'Neme']
+
 async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
-  const [globalStats, dailyStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory] = await Promise.all([
+  const [globalStats, dailyStats, sellerStats, recentOrders, coinAccounts, registrarStats, coinHistory, weeklyStats] = await Promise.all([
     getGlobalStats(),
     getDailyStats(),
     getAllSellerStats(),
@@ -181,7 +185,24 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     getCoinAccounts(),
     getRegistrarStats(),
     getCoinAccountHistory(30),
+    getWeeklyRegistrarStats(),
   ])
+
+  // Ensure all known registrars appear even with 0 sales this week
+  const weeklyWithDefaults = KNOWN_REGISTRARS.map((name) => {
+    const found = weeklyStats.find((r) => r.registered_by === name)
+    return found ?? { registered_by: name, weekly_orders: 0, weekly_coins: 0 }
+  })
+
+  // Current week bounds (Monday–Sunday)
+  const now = new Date()
+  const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay() // 1=Mon … 7=Sun
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - (dayOfWeek - 1))
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6)
+  const fmtDate = (d: Date) =>
+    d.toLocaleDateString('es', { day: '2-digit', month: 'short' })
 
   const totalCoinsSold = Number(globalStats.total_coins_sold)
   const totalAvailable = coinAccounts.reduce((sum, a) => sum + Number(a.current_balance), 0)
@@ -206,6 +227,51 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           <StatCard label="Pendientes hoy" value={String(dailyStats.pending_today)} accent={dailyStats.pending_today > 0} />
           <StatCard label="Completados hoy" value={String(dailyStats.completed_today)} />
           <StatCard label="Monedas hoy" value={`${formatCoins(Number(dailyStats.coins_today))} 🪙`} />
+        </div>
+      </div>
+
+      {/* ─── Weekly Seller Goals ─── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">
+            Meta semanal — {fmtDate(weekStart)} al {fmtDate(weekEnd)}
+          </h3>
+          <span className="text-zinc-600 text-xs">🎯 {formatCoins(WEEKLY_GOAL)} 🪙 por vendedor</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {weeklyWithDefaults.map((r) => {
+            const coins = Number(r.weekly_coins)
+            const pct = Math.min(100, Math.round((coins / WEEKLY_GOAL) * 100))
+            const done = coins >= WEEKLY_GOAL
+            const remaining = Math.max(0, WEEKLY_GOAL - coins)
+            return (
+              <div key={r.registered_by} className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
+                <div className="flex items-start justify-between mb-2">
+                  <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">{r.registered_by}</p>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${done ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
+                    {done ? '✓ Meta cumplida' : `${pct}%`}
+                  </span>
+                </div>
+                <p className="text-2xl font-black text-amber-400 mb-0.5">
+                  {formatCoins(coins)}<span className="text-base ml-1">🪙</span>
+                </p>
+                <p className="text-zinc-500 text-xs mb-3">
+                  {r.weekly_orders} pedidos esta semana
+                  {!done && <span className="ml-2 text-zinc-600">· {formatCoins(remaining)} restantes</span>}
+                </p>
+                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${done ? 'bg-emerald-500' : pct >= 75 ? 'bg-amber-400' : pct >= 40 ? 'bg-amber-500' : 'bg-amber-600'}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs text-zinc-700 mt-1">
+                  <span>{formatCoins(coins)}</span>
+                  <span>{formatCoins(WEEKLY_GOAL)}</span>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -235,7 +301,33 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
             Historial de cuentas de Oros
           </h3>
-          <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-2">
+            {coinHistory.map((h) => {
+              const diff = h.new_balance - h.prev_balance
+              return (
+                <div key={h.id} className="bg-zinc-950 border border-amber-500/10 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-zinc-300 font-medium text-sm">{h.account_name}</p>
+                    <span className={`font-bold text-sm ${diff >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {diff >= 0 ? '+' : ''}{formatCoins(diff)} 🪙
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-zinc-500">
+                    <span>{formatCoins(Number(h.prev_balance))} → <span className="text-white font-semibold">{formatCoins(Number(h.new_balance))}</span> 🪙</span>
+                    <span>{h.changed_by}</span>
+                  </div>
+                  <p className="text-zinc-600 text-xs mt-1">
+                    {new Date(h.changed_at).toLocaleString('es', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -291,8 +383,39 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
 
           {/* Collector debt table */}
           <div>
-            <p className="text-zinc-500 text-xs mb-3">Deuda de colectores a OrosPV (−{COLLECTOR_COMMISSION_RATE * 100}% comisión)</p>
-            <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
+            <p className="text-zinc-500 text-xs mb-3">Deuda de colectores a OrosPV</p>
+
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-2">
+              {sellerStats.map((s) => {
+                const isExempt = commissionExemptSellers.includes(s.seller as Seller)
+                const total = Number(s.total_amount)
+                const comm = isExempt ? 0 : total * COLLECTOR_COMMISSION_RATE
+                const owed = total - comm
+                const c = countries.find((cc) => cc.slug === s.country_slug)
+                return (
+                  <div key={s.seller} className="bg-zinc-950 border border-amber-500/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-bold text-white text-sm">{s.seller}</p>
+                        <p className="text-zinc-500 text-xs">{c?.flag} {s.country}</p>
+                      </div>
+                      <p className="text-amber-400 font-black text-lg">{formatPrice(owed, s.currency_code)}</p>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-zinc-500">
+                      <span>Total: {formatPrice(total, s.currency_code)}</span>
+                      {isExempt
+                        ? <span className="text-zinc-600">Sin comisión</span>
+                        : <span className="text-emerald-400">− {formatPrice(comm, s.currency_code)}</span>
+                      }
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -305,29 +428,28 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {sellerStats
-                      .filter((s) => !commissionExemptSellers.includes(s.seller as Seller))
-                      .map((s) => {
-                        const total = Number(s.total_amount)
-                        const comm = total * COLLECTOR_COMMISSION_RATE
-                        const owed = total - comm
-                        const c = countries.find((cc) => cc.slug === s.country_slug)
-                        return (
-                          <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
-                            <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
-                            <td className="px-4 py-3 text-zinc-400">{c?.flag} {s.country}</td>
-                            <td className="px-4 py-3 text-right text-zinc-400">
-                              {formatPrice(total, s.currency_code)}
-                            </td>
-                            <td className="px-4 py-3 text-right text-emerald-400 font-medium">
-                              − {formatPrice(comm, s.currency_code)}
-                            </td>
-                            <td className="px-4 py-3 text-right text-amber-400 font-black text-base">
-                              {formatPrice(owed, s.currency_code)}
-                            </td>
-                          </tr>
-                        )
-                      })}
+                    {sellerStats.map((s) => {
+                      const isExempt = commissionExemptSellers.includes(s.seller as Seller)
+                      const total = Number(s.total_amount)
+                      const comm = isExempt ? 0 : total * COLLECTOR_COMMISSION_RATE
+                      const owed = total - comm
+                      const c = countries.find((cc) => cc.slug === s.country_slug)
+                      return (
+                        <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
+                          <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
+                          <td className="px-4 py-3 text-zinc-400">{c?.flag} {s.country}</td>
+                          <td className="px-4 py-3 text-right text-zinc-400">
+                            {formatPrice(total, s.currency_code)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-emerald-400 font-medium">
+                            {isExempt ? <span className="text-zinc-600">—</span> : `− ${formatPrice(comm, s.currency_code)}`}
+                          </td>
+                          <td className="px-4 py-3 text-right text-amber-400 font-black text-base">
+                            {formatPrice(owed, s.currency_code)}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -406,45 +528,71 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
           Resumen por colector
         </h3>
-        <div className="bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
-          {sellerStats.length === 0 ? (
-            <p className="text-zinc-600 text-center py-12">No hay registros aún.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
-                    <th className="text-left px-4 py-3">Colector</th>
-                    <th className="text-left px-4 py-3">País</th>
-                    <th className="text-right px-4 py-3">Pedidos</th>
-                    <th className="text-right px-4 py-3">Monedas</th>
-                    <th className="text-right px-4 py-3">Total recaudado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sellerStats.map((s) => {
-                    const country = countries.find((c) => c.slug === s.country_slug)
-                    return (
-                      <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
-                        <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
-                        <td className="px-4 py-3 text-zinc-400">
-                          {country?.flag} {s.country}
-                        </td>
-                        <td className="px-4 py-3 text-right text-zinc-300">{s.order_count}</td>
-                        <td className="px-4 py-3 text-right text-amber-400 font-bold">
-                          {formatCoins(Number(s.total_coins))} 🪙
-                        </td>
-                        <td className="px-4 py-3 text-right text-white font-bold">
-                          {formatPrice(Number(s.total_amount), s.currency_code)}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+
+        {sellerStats.length === 0 ? (
+          <p className="text-zinc-600 text-center py-12">No hay registros aún.</p>
+        ) : (
+          <>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-2">
+              {sellerStats.map((s) => {
+                const country = countries.find((c) => c.slug === s.country_slug)
+                return (
+                  <div key={s.seller} className="bg-zinc-950 border border-amber-500/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <div>
+                        <p className="font-bold text-white text-sm">{s.seller}</p>
+                        <p className="text-zinc-500 text-xs">{country?.flag} {s.country}</p>
+                      </div>
+                      <p className="text-white font-bold text-sm">{formatPrice(Number(s.total_amount), s.currency_code)}</p>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1">
+                      <span className="text-amber-400 font-bold">{formatCoins(Number(s.total_coins))} 🪙</span>
+                      <span>{s.order_count} pedidos</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          )}
-        </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
+                      <th className="text-left px-4 py-3">Colector</th>
+                      <th className="text-left px-4 py-3">País</th>
+                      <th className="text-right px-4 py-3">Pedidos</th>
+                      <th className="text-right px-4 py-3">Monedas</th>
+                      <th className="text-right px-4 py-3">Total recaudado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sellerStats.map((s) => {
+                      const country = countries.find((c) => c.slug === s.country_slug)
+                      return (
+                        <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
+                          <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
+                          <td className="px-4 py-3 text-zinc-400">
+                            {country?.flag} {s.country}
+                          </td>
+                          <td className="px-4 py-3 text-right text-zinc-300">{s.order_count}</td>
+                          <td className="px-4 py-3 text-right text-amber-400 font-bold">
+                            {formatCoins(Number(s.total_coins))} 🪙
+                          </td>
+                          <td className="px-4 py-3 text-right text-white font-bold">
+                            {formatPrice(Number(s.total_amount), s.currency_code)}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Recent orders */}

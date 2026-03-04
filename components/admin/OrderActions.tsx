@@ -87,7 +87,7 @@ export function OrderActions({
           <button
             onClick={() => update(confirm)}
             disabled={loading !== null}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
+            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
               confirm === 'completed'
                 ? 'bg-blue-500 hover:bg-blue-400 text-white'
                 : 'bg-red-500 hover:bg-red-400 text-white'
@@ -99,7 +99,7 @@ export function OrderActions({
           <button
             onClick={() => { setConfirm(null); setCancelReason('') }}
             disabled={loading !== null}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
           >
             <X size={12} />
             No
@@ -115,7 +115,7 @@ export function OrderActions({
         onClick={() => setConfirm('completed')}
         disabled={loading !== null}
         title="Aprobar"
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 transition-colors disabled:opacity-50 text-xs font-semibold"
+        className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/25 text-blue-400 border border-blue-500/30 transition-colors disabled:opacity-50 text-xs font-semibold min-w-[44px] justify-center"
       >
         {loading === 'completed' ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
         <span className="hidden sm:inline">Aprobar</span>
@@ -124,7 +124,7 @@ export function OrderActions({
         onClick={() => setConfirm('cancelled')}
         disabled={loading !== null}
         title="Rechazar"
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/30 transition-colors disabled:opacity-50 text-xs font-semibold"
+        className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/30 transition-colors disabled:opacity-50 text-xs font-semibold min-w-[44px] justify-center"
       >
         {loading === 'cancelled' ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
         <span className="hidden sm:inline">Rechazar</span>

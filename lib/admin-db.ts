@@ -48,6 +48,29 @@ export interface RegistrarStat {
   total_coins: number
 }
 
+export interface WeeklyRegistrarStat {
+  registered_by: string
+  weekly_orders: number
+  weekly_coins: number
+}
+
+export async function getWeeklyRegistrarStats(): Promise<WeeklyRegistrarStat[]> {
+  const db = sql()
+  const result = await db`
+    SELECT
+      registered_by,
+      COUNT(*)::int AS weekly_orders,
+      COALESCE(SUM(package_coins), 0)::bigint AS weekly_coins
+    FROM orders
+    WHERE registered_by IS NOT NULL
+      AND created_at >= DATE_TRUNC('week', NOW())
+      AND created_at < DATE_TRUNC('week', NOW()) + INTERVAL '7 days'
+    GROUP BY registered_by
+    ORDER BY weekly_coins DESC
+  `
+  return result as WeeklyRegistrarStat[]
+}
+
 export async function getRegistrarStats(): Promise<RegistrarStat[]> {
   const db = sql()
   const result = await db`

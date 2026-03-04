@@ -125,18 +125,18 @@ export default async function OrderConfirmationPage({ params }: Props) {
             <PaymentRow label="Método" value={payment.method} />
             {payment.extra && <PaymentRow label="Tipo" value={payment.extra} />}
             {payment.number && (
-              <div className="flex items-center justify-between py-2 border-b border-zinc-800/50">
-                <span className="text-zinc-500 text-sm">Número / Cuenta</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-bold">{payment.number}</span>
+              <div className="flex items-start justify-between gap-3 py-2 border-b border-zinc-800/50">
+                <span className="text-zinc-500 text-sm shrink-0">Número / Cuenta</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-white font-bold text-right break-all">{payment.number}</span>
                   <CopyButton text={payment.number} />
                 </div>
               </div>
             )}
-            <div className="flex items-center justify-between py-2 last:border-0 border-b border-zinc-800/50">
-              <span className="text-zinc-500 text-sm">Nombre</span>
-              <div className="flex items-center gap-2">
-                <span className="text-white font-medium text-sm">{payment.name}</span>
+            <div className="flex items-start justify-between gap-3 py-2 last:border-0 border-b border-zinc-800/50">
+              <span className="text-zinc-500 text-sm shrink-0">Nombre</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-white font-medium text-sm text-right break-words min-w-0">{payment.name}</span>
                 <CopyButton text={payment.name} />
               </div>
             </div>
@@ -221,9 +221,9 @@ export default async function OrderConfirmationPage({ params }: Props) {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-1 border-b border-zinc-800/50 last:border-0">
-      <span className="text-zinc-500">{label}</span>
-      <span className="text-zinc-200 text-right">{value}</span>
+    <div className="flex items-start justify-between gap-3 py-1 border-b border-zinc-800/50 last:border-0">
+      <span className="text-zinc-500 shrink-0">{label}</span>
+      <span className="text-zinc-200 text-right min-w-0">{value}</span>
     </div>
   )
 }

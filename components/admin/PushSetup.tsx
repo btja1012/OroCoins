@@ -114,7 +114,7 @@ export function PushSetup() {
           <span>Activar notificaciones</span>
         </button>
         {showGuide && (
-          <div className="absolute right-0 top-10 z-50 w-72 bg-zinc-900 border border-amber-500/20 rounded-xl p-4 shadow-xl">
+          <div className="absolute right-0 top-10 z-50 w-[280px] max-w-[calc(100vw-2rem)] bg-zinc-900 border border-amber-500/20 rounded-xl p-4 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <p className="text-white text-sm font-bold">Activar en iPhone / iPad</p>
               <button onClick={() => setShowGuide(false)} className="text-zinc-500 hover:text-white">
