@@ -54,7 +54,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-black">
-      <AutoRefresh intervalMs={30000} />
+      <AutoRefresh intervalMs={15000} />
       <TabTitle pendingCount={pendingCount} />
       <SessionWarning />
       {/* Header */}

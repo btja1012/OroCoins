@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/payment-reminder?group=A",
+      "schedule": "0 12 * * 1"
+    },
+    {
+      "path": "/api/cron/payment-reminder?group=B",
+      "schedule": "0 13 * * 1"
+    },
+    {
+      "path": "/api/cron/payment-reminder?group=C",
+      "schedule": "0 14 * * 1"
+    }
+  ]
+}

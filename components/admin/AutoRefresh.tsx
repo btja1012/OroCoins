@@ -9,11 +9,11 @@ export function AutoRefresh({ intervalMs = 30000 }: { intervalMs?: number }) {
   const [lastUpdated, setLastUpdated] = useState<number>(Date.now())
   const [elapsed, setElapsed] = useState(0)
 
-  // Update elapsed every 15 seconds
+  // Update elapsed every 5 seconds
   useEffect(() => {
     const tick = setInterval(() => {
       setElapsed(Math.round((Date.now() - lastUpdated) / 1000))
-    }, 15000)
+    }, 5000)
     return () => clearInterval(tick)
   }, [lastUpdated])
 
