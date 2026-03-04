@@ -318,6 +318,11 @@ export async function getAppSetting(key: string): Promise<string | null> {
   return (result[0]?.value as string) ?? null
 }
 
+export async function deleteAppSetting(key: string): Promise<void> {
+  const db = sql()
+  await db`DELETE FROM app_settings WHERE key = ${key}`
+}
+
 export async function setAppSetting(key: string, value: string, updatedBy: string): Promise<void> {
   const db = sql()
   await db`

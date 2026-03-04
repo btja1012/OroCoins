@@ -1,33 +1,48 @@
-// Tasas de cambio en tiempo real usando open.er-api.com
-// Gratuito, sin API key requerida, soporta ~160 monedas incluyendo VES
-// Monedas usadas en OroCoins:
-//   USD (Ecuador)    = 1.0 sin conversión
-//   MXN (México)     → tasa desde API
-//   COP (Colombia)   → tasa desde API
-//   VES (Venezuela)  → tasa desde API
+// Tasas de cambio automáticas
+// CRC, MXN, COP → open.er-api.com (gratuito, sin API key, actualiza cada hora)
+// VES           → ve.dolarapi.com (tasa BCV en tiempo real) con fallback a open.er-api.com
 
 export async function getUSDRates(): Promise<Record<string, number>> {
   const base: Record<string, number> = { USD: 1 }
 
+  // CRC, MXN, COP + VES como fallback desde open.er-api.com
   try {
     const res = await fetch(
       'https://open.er-api.com/v6/latest/USD',
       { next: { revalidate: 3600 } } // cache 1 hora
     )
-
-    if (!res.ok) return base
-
-    const data = await res.json()
-    const rates = data?.rates ?? {}
-
-    for (const currency of ['MXN', 'COP', 'VES', 'CRC']) {
-      if (typeof rates[currency] === 'number') {
-        base[currency] = rates[currency]
+    if (res.ok) {
+      const data = await res.json()
+      const rates = data?.rates ?? {}
+      for (const currency of ['CRC', 'MXN', 'COP', 'VES']) {
+        if (typeof rates[currency] === 'number') {
+          base[currency] = rates[currency]
+        }
       }
     }
-  } catch {
-    // Si falla la API, retornar solo USD=1
-  }
+  } catch { /* silent */ }
+
+  // VES más preciso desde ve.dolarapi.com (tasa BCV actualizada)
+  try {
+    const res = await fetch(
+      'https://ve.dolarapi.com/v1/dolares',
+      { next: { revalidate: 1800 } } // cache 30 min
+    )
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        const bcv = data.find(
+          (d: { fuente?: string }) =>
+            typeof d.fuente === 'string' && d.fuente.toLowerCase() === 'bcv'
+        )
+        const rate = (bcv as { promedio?: number; venta?: number } | undefined)?.promedio
+          ?? (bcv as { promedio?: number; venta?: number } | undefined)?.venta
+        if (typeof rate === 'number' && rate > 0) {
+          base['VES'] = rate
+        }
+      }
+    }
+  } catch { /* mantiene el VES de open.er-api.com como fallback */ }
 
   return base
 }
