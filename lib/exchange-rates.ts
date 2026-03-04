@@ -47,6 +47,27 @@ export async function getUSDRates(): Promise<Record<string, number>> {
   return base
 }
 
+// Retorna las tasas efectivas: automáticas con overrides manuales aplicados
+export async function getEffectiveUSDRates(
+  getManualOverride: (key: string) => Promise<string | null>
+): Promise<Record<string, number>> {
+  const MANUAL_KEYS: Record<string, string> = {
+    crc_rate: 'CRC', mxn_rate: 'MXN', cop_rate: 'COP', ves_rate: 'VES',
+  }
+  const [rates, ...manualValues] = await Promise.all([
+    getUSDRates(),
+    ...Object.keys(MANUAL_KEYS).map((k) => getManualOverride(k)),
+  ])
+  Object.keys(MANUAL_KEYS).forEach((key, i) => {
+    const str = manualValues[i]
+    if (str) {
+      const num = parseFloat(str)
+      if (num > 0) rates[MANUAL_KEYS[key]] = num
+    }
+  })
+  return rates
+}
+
 // Convierte un monto en moneda local a USD
 // Retorna null si la moneda no tiene tasa disponible
 export function localToUSD(
