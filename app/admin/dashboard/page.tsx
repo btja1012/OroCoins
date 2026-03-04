@@ -16,9 +16,6 @@ import {
 } from '@/lib/admin-db'
 import {
   countries, formatPrice, formatCoins, sellers,
-  commissionExemptSellers, COLLECTOR_COMMISSION_RATE,
-  REGISTRAR_MILESTONE_COINS, REGISTRAR_BONUS_USD,
-  type Seller,
 } from '@/lib/data'
 import { CoinBalanceForm } from '@/components/admin/CoinBalanceForm'
 import { LogoutButton } from '@/components/admin/LogoutButton'
@@ -29,8 +26,7 @@ import { OrderActions } from '@/components/admin/OrderActions'
 import { OrdersTable } from '@/components/admin/OrdersTable'
 import { TabTitle } from '@/components/admin/TabTitle'
 import { SessionWarning } from '@/components/admin/SessionWarning'
-import { PendingPayments } from '@/components/admin/PendingPayments'
-import { VesRateConfig } from '@/components/admin/VesRateConfig'
+import { ExchangeRateConfig } from '@/components/admin/ExchangeRateConfig'
 import { DebtCard } from '@/components/seller/DebtCard'
 import type { Order } from '@/lib/db'
 
@@ -368,143 +364,18 @@ async function AdminView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         </div>
       )}
 
-      {/* ─── Commissions & Payments — super_admin only ─── */}
+      {/* ─── Exchange rates — super_admin only ─── */}
       {isSuperAdmin && (
-        <div className="space-y-6">
-          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">
-            Comisiones y pagos
+        <div>
+          <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
+            Tipos de cambio
           </h3>
-
-          {/* VES manual exchange rate */}
-          <VesRateConfig />
-
-          {/* Pending payment requests from collectors */}
-          <PendingPayments />
-
-          {/* Collector debt table */}
-          <div>
-            <p className="text-zinc-500 text-xs mb-3">Deuda de colectores a OrosPV</p>
-
-            {/* Mobile cards */}
-            <div className="md:hidden space-y-2">
-              {sellerStats.map((s) => {
-                const isExempt = commissionExemptSellers.includes(s.seller as Seller)
-                const total = Number(s.total_amount)
-                const comm = isExempt ? 0 : total * COLLECTOR_COMMISSION_RATE
-                const owed = total - comm
-                const c = countries.find((cc) => cc.slug === s.country_slug)
-                return (
-                  <div key={s.seller} className="bg-zinc-950 border border-amber-500/10 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="font-bold text-white text-sm">{s.seller}</p>
-                        <p className="text-zinc-500 text-xs">{c?.flag} {s.country}</p>
-                      </div>
-                      <p className="text-amber-400 font-black text-lg">{formatPrice(owed, s.currency_code)}</p>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
-                      <span>Total: {formatPrice(total, s.currency_code)}</span>
-                      {isExempt
-                        ? <span className="text-zinc-600">Sin comisión</span>
-                        : <span className="text-emerald-400">− {formatPrice(comm, s.currency_code)}</span>
-                      }
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden md:block bg-zinc-950 border border-amber-500/10 rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-zinc-900 text-zinc-500 text-xs uppercase tracking-wider">
-                      <th className="text-left px-4 py-3">Colector</th>
-                      <th className="text-left px-4 py-3">País</th>
-                      <th className="text-right px-4 py-3">Total recolectado</th>
-                      <th className="text-right px-4 py-3">Comisión 3%</th>
-                      <th className="text-right px-4 py-3">Debe a OrosPV</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sellerStats.map((s) => {
-                      const isExempt = commissionExemptSellers.includes(s.seller as Seller)
-                      const total = Number(s.total_amount)
-                      const comm = isExempt ? 0 : total * COLLECTOR_COMMISSION_RATE
-                      const owed = total - comm
-                      const c = countries.find((cc) => cc.slug === s.country_slug)
-                      return (
-                        <tr key={s.seller} className="border-b border-zinc-900 hover:bg-amber-500/5">
-                          <td className="px-4 py-3 font-bold text-white">{s.seller}</td>
-                          <td className="px-4 py-3 text-zinc-400">{c?.flag} {s.country}</td>
-                          <td className="px-4 py-3 text-right text-zinc-400">
-                            {formatPrice(total, s.currency_code)}
-                          </td>
-                          <td className="px-4 py-3 text-right text-emerald-400 font-medium">
-                            {isExempt ? <span className="text-zinc-600">—</span> : `− ${formatPrice(comm, s.currency_code)}`}
-                          </td>
-                          <td className="px-4 py-3 text-right text-amber-400 font-black text-base">
-                            {formatPrice(owed, s.currency_code)}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Registrar bonuses (Neme / Maga) */}
-          {registrarStats.length > 0 && (
-            <div>
-              <p className="text-zinc-500 text-xs mb-3">
-                Bonos de registradores — ${REGISTRAR_BONUS_USD} USD por cada {formatCoins(REGISTRAR_MILESTONE_COINS)} 🪙 vendidas
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {registrarStats.map((r) => {
-                  const coins = Number(r.total_coins)
-                  const milestones = Math.floor(coins / REGISTRAR_MILESTONE_COINS)
-                  const progressCoins = coins % REGISTRAR_MILESTONE_COINS
-                  const progressPct = Math.round((progressCoins / REGISTRAR_MILESTONE_COINS) * 100)
-                  const totalEarned = milestones * REGISTRAR_BONUS_USD
-                  return (
-                    <div key={r.registered_by} className="bg-zinc-950 border border-amber-500/10 rounded-2xl p-5">
-                      <div className="flex items-start justify-between mb-3">
-                        <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">{r.registered_by}</p>
-                        <span className="text-emerald-400 font-black text-lg">${totalEarned} USD</span>
-                      </div>
-                      <p className="text-2xl font-black text-amber-400 mb-1">
-                        {formatCoins(coins)}<span className="text-base ml-1">🪙</span>
-                      </p>
-                      <p className="text-zinc-500 text-xs mb-3">
-                        {milestones} × ${REGISTRAR_BONUS_USD} completados · {r.order_count} pedidos
-                      </p>
-                      {/* Progress to next milestone */}
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-zinc-600 mb-1">
-                          <span>Siguiente bono</span>
-                          <span>{formatCoins(progressCoins)} / {formatCoins(REGISTRAR_MILESTONE_COINS)} 🪙 ({progressPct}%)</span>
-                        </div>
-                        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-amber-500 rounded-full transition-all"
-                            style={{ width: `${progressPct}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+          <ExchangeRateConfig />
         </div>
       )}
 
       {/* Sales by registrar (Maga / Neme) */}
-      {!isSuperAdmin && registrarStats.length > 0 && (
+      {registrarStats.length > 0 && (
         <div>
           <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
             Ventas por vendedor
