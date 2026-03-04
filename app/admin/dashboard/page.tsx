@@ -84,7 +84,7 @@ export default async function DashboardPage() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
 
         {/* ─── SELLER VIEW ─── */}
-        {session.sellerName && (
+        {session.sellerName && !isAdmin && (
           <SellerView sellerName={session.sellerName} isSeller={session.role === 'seller'} />
         )}
 
