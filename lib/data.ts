@@ -166,9 +166,9 @@ export function getCoinRate(country: Country): number {
   return country.packages[0].coins / country.packages[0].price
 }
 
-/** Round coins to nearest 500 */
-export function roundToNearest500(coins: number): number {
-  return Math.round(coins / 500) * 500
+/** Round coins to nearest 50 */
+export function roundToNearest50(coins: number): number {
+  return Math.round(coins / 50) * 50
 }
 
 /**
@@ -180,7 +180,7 @@ export function roundToNearest500(coins: number): number {
 export function calcCustomCoins(country: Country, amount: number): number {
   const exactPkg = country.packages.find((p) => Math.abs(p.price - amount) < 0.001)
   if (exactPkg) return exactPkg.coins
-  return roundToNearest500(amount * getCoinRate(country))
+  return roundToNearest50(amount * getCoinRate(country))
 }
 
 // Sellers and their assigned countries

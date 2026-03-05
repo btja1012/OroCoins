@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Zap } from 'lucide-react'
-import { Country, Package, formatPrice, formatCoins, getCoinRate } from '@/lib/data'
+import { Country, Package, formatPrice, formatCoins, getCoinRate, roundToNearest50 } from '@/lib/data'
 import { OrderModal } from './OrderModal'
 
 interface PackageGridProps {
@@ -28,7 +28,7 @@ export function PackageGrid({ country }: PackageGridProps) {
     setCustomAmount(value)
     const num = parseFloat(value.replace(',', '.'))
     if (!isNaN(num) && num > 0) {
-      setCustomCoins(Math.floor(num * rate))
+      setCustomCoins(roundToNearest50(num * rate))
     } else {
       setCustomCoins(0)
     }
